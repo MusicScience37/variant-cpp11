@@ -25,7 +25,7 @@
 
 #include "variant_cpp11/variant.h"
 
-TEST_CASE("") {
+TEST_CASE("variant_cpp11::impl::max_size") {
     using variant_cpp11::impl::max_size;
 
     SECTION("no value") {
