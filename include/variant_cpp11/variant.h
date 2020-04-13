@@ -24,11 +24,28 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
+#include <type_traits>
 
 /*!
  * \brief namespace of variant-cpp11 project
  */
 namespace variant_cpp11 {
+
+/*
+ * Definitions
+ */
+
+/*!
+ * \brief get index for invalid types
+ *
+ * \return constexpr std::size_t index
+ */
+constexpr std::size_t invalid_index() {
+    return std::numeric_limits<std::size_t>::max();
+}
+
+struct invalid_type {};
 
 /*!
  * \brief namespace of implementation details
@@ -108,6 +125,69 @@ struct variant_storage {
 
     //! storage
     alignas(get_align()) char data[get_size()];
+};
+
+/*!
+ * \brief helper struct for variant
+ *
+ * \tparam index index of the first type in template parameters
+ * \tparam types types in variant
+ */
+template <std::size_t index, typename... types>
+struct variant_helper;
+
+/*!
+ * \brief variant_helper for multiple types
+ *
+ * \tparam index index
+ * \tparam front_type first type
+ * \tparam remaining_types remaining types
+ */
+template <std::size_t index, typename front_type, typename... remaining_types>
+struct variant_helper<index, front_type, remaining_types...> {
+    //! variant_helper of remaining types
+    using remaining_helper = variant_helper<index + 1, remaining_types...>;
+
+    /*!
+     * \brief get index of a type
+     *
+     * \tparam type type
+     * \return constexpr std::size_t index
+     */
+    template <typename type>
+    static constexpr std::size_t type_index() {
+        return (std::is_same<type, front_type>::value)
+            ? index
+            : remaining_helper::template type_index<type>();
+    }
+
+    //! type of an index
+    template <std::size_t index_to_get>
+    using index_type =
+        typename std::conditional<index_to_get == index, front_type,
+            typename remaining_helper::template index_type<index_to_get>>::type;
+};
+
+/*!
+ * \brief variant_helper for no type
+ *
+ * \tparam index index
+ */
+template <std::size_t index>
+struct variant_helper<index> {
+    /*!
+     * \brief get index of a type
+     *
+     * \tparam type type
+     * \return constexpr std::size_t index
+     */
+    template <typename type>
+    static constexpr std::size_t type_index() {
+        return invalid_index();
+    }
+
+    template <std::size_t index_to_get>
+    using index_type = invalid_type;
 };
 
 }  // namespace impl
