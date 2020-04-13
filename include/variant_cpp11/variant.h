@@ -130,23 +130,25 @@ struct variant_storage {
 /*!
  * \brief helper struct for variant
  *
- * \tparam index index of the first type in template parameters
+ * \tparam front_index index of the first type in template parameters
  * \tparam types types in variant
  */
-template <std::size_t index, typename... types>
+template <std::size_t front_index, typename... types>
 struct variant_helper;
 
 /*!
  * \brief variant_helper for multiple types
  *
- * \tparam index index
+ * \tparam front_index index of front_type
  * \tparam front_type first type
  * \tparam remaining_types remaining types
  */
-template <std::size_t index, typename front_type, typename... remaining_types>
-struct variant_helper<index, front_type, remaining_types...> {
+template <std::size_t front_index, typename front_type,
+    typename... remaining_types>
+struct variant_helper<front_index, front_type, remaining_types...> {
     //! variant_helper of remaining types
-    using remaining_helper = variant_helper<index + 1, remaining_types...>;
+    using remaining_helper =
+        variant_helper<front_index + 1, remaining_types...>;
 
     /*!
      * \brief get index of a type
@@ -157,24 +159,28 @@ struct variant_helper<index, front_type, remaining_types...> {
     template <typename type>
     static constexpr std::size_t type_index() {
         return (std::is_same<type, front_type>::value)
-            ? index
+            ? front_index
             : remaining_helper::template type_index<type>();
     }
 
-    //! type of an index
-    template <std::size_t index_to_get>
+    /*!
+     * \brief type of an index
+     *
+     * \tparam index index
+     */
+    template <std::size_t index>
     using index_type =
-        typename std::conditional<index_to_get == index, front_type,
-            typename remaining_helper::template index_type<index_to_get>>::type;
+        typename std::conditional<index == front_index, front_type,
+            typename remaining_helper::template index_type<index>>::type;
 };
 
 /*!
  * \brief variant_helper for no type
  *
- * \tparam index index
+ * \tparam front_index index
  */
-template <std::size_t index>
-struct variant_helper<index> {
+template <std::size_t front_index>
+struct variant_helper<front_index> {
     /*!
      * \brief get index of a type
      *
@@ -186,7 +192,12 @@ struct variant_helper<index> {
         return invalid_index();
     }
 
-    template <std::size_t index_to_get>
+    /*!
+     * \brief type of an index
+     *
+     * \tparam index index
+     */
+    template <std::size_t index>
     using index_type = invalid_type;
 };
 
