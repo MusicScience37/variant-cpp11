@@ -41,7 +41,7 @@ namespace variant_cpp11 {
  *
  * \return constexpr std::size_t index
  */
-constexpr std::size_t invalid_index() {
+inline constexpr std::size_t invalid_index() {
     return std::numeric_limits<std::size_t>::max();
 }
 
@@ -125,7 +125,27 @@ struct variant_storage {
 
     //! storage
     alignas(get_align()) char data[get_size()];
+
+    /*!
+     * \brief get void pointer of data
+     *
+     * \return void* void pointer of data
+     */
+    void* void_ptr() noexcept { return static_cast<void*>(data); }
 };
+
+/*!
+ * \brief create a object
+ *
+ * \tparam creating_type type of object to create
+ * \tparam arg_types types of args
+ * \param ptr pointer in which the object is created
+ * \param args arguments of constructor
+ */
+template <typename creating_type, typename... arg_types>
+inline void create(void* ptr, arg_types&&... args) {
+    ::new (ptr) creating_type(std::forward<arg_types>(args)...);
+}
 
 /*!
  * \brief helper struct for variant
@@ -172,6 +192,20 @@ struct variant_helper<front_index, front_type, remaining_types...> {
     using index_type =
         typename std::conditional<index == front_index, front_type,
             typename remaining_helper::template index_type<index>>::type;
+
+    /*!
+     * \brief destoy the object in a pointer
+     *
+     * \param index index of type
+     * \param ptr pointer
+     */
+    static void destroy(std::size_t index, void* ptr) {
+        if (index == front_index) {
+            static_cast<front_type*>(ptr)->~front_type();
+        } else {
+            remaining_helper::destroy(index, ptr);
+        }
+    }
 };
 
 /*!
@@ -199,6 +233,14 @@ struct variant_helper<front_index> {
      */
     template <std::size_t index>
     using index_type = invalid_type;
+
+    /*!
+     * \brief destoy the object in a pointer
+     *
+     * \param index index of type
+     * \param ptr pointer
+     */
+    static void destroy(std::size_t index, void* ptr) {}
 };
 
 }  // namespace impl

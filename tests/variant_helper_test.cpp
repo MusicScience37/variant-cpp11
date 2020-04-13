@@ -25,8 +25,38 @@
 
 #include "variant_cpp11/variant.h"
 
+namespace {
+
+struct object_count {
+    static int count;
+
+    object_count() noexcept { ++count; }
+    explicit object_count(int /*unused*/) noexcept { ++count; }
+
+    object_count(const object_count& /*unused*/) noexcept { ++count; }
+    object_count(object_count&& /*unused*/) noexcept { ++count; }
+
+    // NOLINTNEXTLINE(cert-oop54-cpp)
+    object_count& operator=(const object_count& /*unused*/) noexcept {
+        ++count;
+        return *this;
+    }
+    object_count& operator=(object_count&& /*unused*/) noexcept {
+        ++count;
+        return *this;
+    }
+
+    ~object_count() { --count; }
+};
+
+int object_count::count = 0;
+
+}  // namespace
+
 TEST_CASE("variant_cpp11::impl::variant_helper") {
+    using variant_cpp11::impl::create;
     using variant_cpp11::impl::variant_helper;
+    using variant_cpp11::impl::variant_storage;
 
     SECTION("type_index function") {
         using test_type = variant_helper<0, int, float, double>;
@@ -50,5 +80,23 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         using type2 = typename test_type::index_type<2>;
         REQUIRE(
             std::is_same<type2, variant_cpp11::invalid_type>::value == true);
+    }
+
+    SECTION("assign and destroy") {
+        using test_helper = variant_helper<0, float, object_count, int>;
+        using test_storage = variant_storage<float, object_count, int>;
+        test_storage storage;
+
+        REQUIRE(object_count::count == 0);
+        create<object_count>(storage.void_ptr());
+        REQUIRE(object_count::count == 1);
+        test_helper::destroy(1, storage.void_ptr());
+        REQUIRE(object_count::count == 0);
+
+        REQUIRE(object_count::count == 0);
+        create<object_count>(storage.void_ptr(), 3);
+        REQUIRE(object_count::count == 1);
+        test_helper::destroy(1, storage.void_ptr());
+        REQUIRE(object_count::count == 0);
     }
 }
