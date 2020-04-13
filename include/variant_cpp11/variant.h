@@ -185,6 +185,20 @@ struct variant_helper<front_index, front_type, remaining_types...> {
     }
 
     /*!
+     * \brief get index of a type similar to given type
+     *
+     * \tparam type type
+     * \return constexpr std::size_t index
+     */
+    template <typename type>
+    static constexpr std::size_t similar_type_index() {
+        return (std::is_same<typename std::decay<type>::type,
+                   typename std::decay<front_type>::type>::value)
+            ? front_index
+            : remaining_helper::template similar_type_index<type>();
+    }
+
+    /*!
      * \brief type of an index
      *
      * \tparam index index
@@ -224,6 +238,17 @@ struct variant_helper<front_index> {
      */
     template <typename type>
     static constexpr std::size_t type_index() {
+        return invalid_index();
+    }
+
+    /*!
+     * \brief get index of a type similar to given type
+     *
+     * \tparam type type
+     * \return constexpr std::size_t index
+     */
+    template <typename type>
+    static constexpr std::size_t similar_type_index() {
         return invalid_index();
     }
 

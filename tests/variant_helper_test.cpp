@@ -71,6 +71,16 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         REQUIRE(index_const_int == variant_cpp11::invalid_index());
     }
 
+    SECTION("similar_type_index function") {
+        using test_type = variant_helper<0, int, float, double>;
+        constexpr std::size_t index_const_int =
+            test_type::similar_type_index<const int>();
+        REQUIRE(index_const_int == 0);
+        constexpr std::size_t index_const_int_pointer =
+            test_type::similar_type_index<const int*>();
+        REQUIRE(index_const_int_pointer == variant_cpp11::invalid_index());
+    }
+
     SECTION("index_type alias") {
         using test_type = variant_helper<0, float, double>;
         using type0 = typename test_type::index_type<0>;
