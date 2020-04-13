@@ -113,4 +113,15 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }
+
+    SECTION("assignment operator with one type") {
+        variant_cpp11::variant<object_count> var;
+        REQUIRE(object_count::count == 0);
+        object_count obj;
+        REQUIRE(object_count::count == 1);
+        var = obj;
+        REQUIRE(object_count::count == 2);
+        var = std::move(obj);
+        REQUIRE(object_count::count == 1);
+    }
 }

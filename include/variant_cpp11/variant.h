@@ -355,6 +355,22 @@ public:
             std::forward<type>(obj));
     }
 
+    /*!
+     * \brief assign an object
+     *
+     * \tparam type type of the object to create in this object
+     * \param obj object to copy or move from
+     * \return variant& this object
+     */
+    template <typename type>
+    variant& operator=(type&& obj) {
+        constexpr std::size_t type_index =
+            helper::template assigning_type_index<type>();
+        emplace<typename helper::template index_type<type_index>>(
+            std::forward<type>(obj));
+        return *this;
+    }
+
     //! \todo implementation
     variant(const variant&) = delete;
     //! \todo implementation
