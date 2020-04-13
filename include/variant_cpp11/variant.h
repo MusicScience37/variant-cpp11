@@ -262,7 +262,7 @@ private:
     std::size_t _index;
 
 public:
-    //! default constructor
+    //! default constructor (create invalid object)
     variant() noexcept : _storage(), _index(invalid_index()) {}
 
     /*!
