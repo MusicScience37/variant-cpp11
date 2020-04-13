@@ -71,6 +71,18 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 0);
     }
 
+    SECTION("copy construct from an object and destruct with one type") {
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
+        REQUIRE(object_count::count == 0);
+        object_count obj;
+        REQUIRE(object_count::count == 1);
+        REQUIRE_NOTHROW(
+            ptr = std::make_shared<variant_cpp11::variant<object_count>>(obj));
+        REQUIRE(object_count::count == 2);
+        REQUIRE_NOTHROW(ptr.reset());
+        REQUIRE(object_count::count == 1);
+    }
+
     SECTION("emplace and destruct with one type") {
         std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
         REQUIRE(object_count::count == 0);
