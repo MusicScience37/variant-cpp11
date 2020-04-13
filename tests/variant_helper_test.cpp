@@ -81,6 +81,19 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         REQUIRE(index_const_int_pointer == variant_cpp11::invalid_index());
     }
 
+    SECTION("convertible_type_index function") {
+        using test_type = variant_helper<0, float, std::string>;
+        constexpr std::size_t index_char_pointer =
+            test_type::convertible_type_index<char*>();
+        REQUIRE(index_char_pointer == 1);
+        constexpr std::size_t index_short =
+            test_type::convertible_type_index<short>();  // NOLINT
+        REQUIRE(index_short == 0);
+        constexpr std::size_t index_int_pointer =
+            test_type::convertible_type_index<int*>();
+        REQUIRE(index_int_pointer == variant_cpp11::invalid_index());
+    }
+
     SECTION("index_type alias") {
         using test_type = variant_helper<0, float, double>;
         using type0 = typename test_type::index_type<0>;
