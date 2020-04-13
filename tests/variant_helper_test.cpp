@@ -47,5 +47,8 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         REQUIRE(std::is_same<type0, float>::value == true);
         using type1 = typename test_type::index_type<1>;
         REQUIRE(std::is_same<type1, double>::value == true);
+        using type2 = typename test_type::index_type<2>;
+        REQUIRE(
+            std::is_same<type2, variant_cpp11::invalid_type>::value == true);
     }
 }
