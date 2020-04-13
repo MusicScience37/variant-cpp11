@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 #include <catch2/catch.hpp>
+#include <cstdint>
 
 #include "variant_cpp11/variant.h"
 
@@ -91,6 +92,37 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         REQUIRE(index_short == 0);
         constexpr std::size_t index_int_pointer =
             test_type::convertible_type_index<int*>();
+        REQUIRE(index_int_pointer == variant_cpp11::invalid_index());
+    }
+
+    SECTION("assigning_type_index function") {
+        using test_type =
+            variant_helper<0, int, float, std::string, object_count>;
+        constexpr std::size_t index_int =
+            test_type::assigning_type_index<int>();
+        REQUIRE(index_int == 0);
+        constexpr std::size_t index_float =
+            test_type::assigning_type_index<float>();
+        REQUIRE(index_float == 1);
+        constexpr std::size_t index_string =
+            test_type::assigning_type_index<std::string>();
+        REQUIRE(index_string == 2);
+
+        constexpr std::size_t index_const_float =
+            test_type::assigning_type_index<const float>();
+        REQUIRE(index_const_float == 1);
+        constexpr std::size_t index_const_object_count_ref =
+            test_type::assigning_type_index<const object_count&>();
+        REQUIRE(index_const_object_count_ref == 3);
+
+        constexpr std::size_t index_char =
+            test_type::assigning_type_index<char>();
+        REQUIRE(index_char == 0);
+        constexpr std::size_t index_const_char_pointer =
+            test_type::assigning_type_index<const char*>();
+        REQUIRE(index_const_char_pointer == 2);
+        constexpr std::size_t index_int_pointer =
+            test_type::assigning_type_index<int*>();
         REQUIRE(index_int_pointer == variant_cpp11::invalid_index());
     }
 

@@ -212,6 +212,21 @@ struct variant_helper<front_index, front_type, remaining_types...> {
     }
 
     /*!
+     * \brief get index of a type which can be assigned
+     *
+     * \tparam type type
+     * \return constexpr std::size_t index
+     */
+    template <typename type>
+    static constexpr std::size_t assigning_type_index() {
+        return (type_index<type>() != invalid_index())
+            ? type_index<type>()
+            : (similar_type_index<type>() != invalid_index())
+                ? similar_type_index<type>()
+                : convertible_type_index<type>();
+    }
+
+    /*!
      * \brief type of an index
      *
      * \tparam index index
@@ -273,6 +288,17 @@ struct variant_helper<front_index> {
      */
     template <typename type>
     static constexpr std::size_t convertible_type_index() {
+        return invalid_index();
+    }
+
+    /*!
+     * \brief get index of a type which can be assigned
+     *
+     * \tparam type type
+     * \return constexpr std::size_t index
+     */
+    template <typename type>
+    static constexpr std::size_t assigning_type_index() {
         return invalid_index();
     }
 
