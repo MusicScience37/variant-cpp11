@@ -115,13 +115,17 @@ TEST_CASE("variant_cpp11::variant") {
     }
 
     SECTION("assignment operator with one type") {
-        variant_cpp11::variant<object_count> var;
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
+        REQUIRE_NOTHROW(
+            ptr = std::make_shared<variant_cpp11::variant<object_count>>());
         REQUIRE(object_count::count == 0);
         object_count obj;
         REQUIRE(object_count::count == 1);
-        var = obj;
+        REQUIRE_NOTHROW(*ptr = obj);
         REQUIRE(object_count::count == 2);
-        var = std::move(obj);
+        REQUIRE_NOTHROW(*ptr = std::move(obj));
         REQUIRE(object_count::count == 1);
+        REQUIRE_NOTHROW(ptr.reset());
+        REQUIRE(object_count::count == 0);
     }
 }
