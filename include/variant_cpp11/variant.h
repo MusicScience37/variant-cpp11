@@ -81,6 +81,35 @@ struct max_size<> {
     static constexpr std::size_t get() { return 0; }
 };
 
+/*!
+ * \brief storage for variant
+ *
+ * \tparam types types used in variant
+ */
+template <typename... types>
+struct variant_storage {
+    /*!
+     * \brief get size of the storage
+     *
+     * \return constexpr std::size_t size of the storage
+     */
+    static constexpr std::size_t get_size() {
+        return max_size<sizeof(types)...>::get();
+    }
+
+    /*!
+     * \brief get alignment of the storage
+     *
+     * \return constexpr std::size_t alignment of the storage
+     */
+    static constexpr std::size_t get_align() {
+        return max_size<alignof(types)...>::get();
+    }
+
+    //! storage
+    alignas(get_align()) char data[get_size()];
+};
+
 }  // namespace impl
 
 }  // namespace variant_cpp11

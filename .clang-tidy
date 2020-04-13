@@ -6,8 +6,8 @@ Checks: >
     performance-*,
     portability-*,
     readability-*,-readability-magic-numbers,-readability-redundant-member-init,
-    modernize-*,-modernize-use-trailing-return-type,-modernize-use-default-member-init,-modernize-pass-by-value,
-    hicpp-*,-hicpp-vararg,
+    modernize-*,-modernize-use-trailing-return-type,-modernize-use-default-member-init,-modernize-pass-by-value,-modernize-avoid-c-arrays,
+    hicpp-*,-hicpp-vararg,-hicpp-avoid-c-arrays,
     cert-*,
     bugprone-*,
 CheckOptions:
