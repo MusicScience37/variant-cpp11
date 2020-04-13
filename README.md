@@ -16,3 +16,9 @@ For details, see LICENSE.txt.
 | C++      | [Clang-Format](https://clang.llvm.org/docs/ClangFormat.html) |
 | CMake    | [cmake-format](https://github.com/cheshirekow/cmake_format)  |
 | Markdown | [Prettier](https://prettier.io/)                             |
+
+### Static Analysis
+
+| Language | Analyzer                                               |
+| :------- | :----------------------------------------------------- |
+| C++      | [Clang-Tidy](https://clang.llvm.org/extra/clang-tidy/) |

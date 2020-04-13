@@ -7,6 +7,10 @@ project(
     LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+include(TargetLinkSystemLibrary)
+include(ConfigureClangTidy)
+
 add_library(variant-cpp11 INTERFACE)
 target_include_directories(variant-cpp11 INTERFACE include)
 
