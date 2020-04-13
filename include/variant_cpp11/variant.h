@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <limits>
 #include <type_traits>
+#include <utility>
 
 /*!
  * \brief namespace of variant-cpp11 project
@@ -199,7 +200,7 @@ struct variant_helper<front_index, front_type, remaining_types...> {
      * \param index index of type
      * \param ptr pointer
      */
-    static void destroy(std::size_t index, void* ptr) {
+    static void destroy(std::size_t index, void* ptr) noexcept {
         if (index == front_index) {
             static_cast<front_type*>(ptr)->~front_type();
         } else {
@@ -240,9 +241,100 @@ struct variant_helper<front_index> {
      * \param index index of type
      * \param ptr pointer
      */
-    static void destroy(std::size_t index, void* ptr) {}
+    static void destroy(std::size_t index, void* ptr) noexcept {}
 };
 
 }  // namespace impl
+
+template <typename... stored_types>
+class variant {
+private:
+    //! helper type
+    using helper = impl::variant_helper<0, stored_types...>;
+
+    //! storage type
+    using storage_type = impl::variant_storage<stored_types...>;
+
+    //! storage
+    storage_type _storage;
+
+    //! type index
+    std::size_t _index;
+
+public:
+    //! default constructor
+    variant() noexcept : _storage(), _index(invalid_index()) {}
+
+    /*!
+     * \brief construct with an object
+     *
+     * \tparam type type of the object to create in this object
+     * \param obj object to copy from
+     */
+    template <typename type>
+    // NOLINTNEXTLINE(hicpp-member-init,google-explicit-constructor,hicpp-explicit-conversions)
+    variant(const type& obj) : variant() {
+        emplace<type>(obj);
+    }
+
+    //! \todo implementation
+    variant(const variant&) = delete;
+    //! \todo implementation
+    variant(variant&&) = delete;
+    //! \todo implementation
+    variant& operator=(const variant&) = delete;
+    //! \todo implementation
+    variant& operator=(variant&&) = delete;
+
+    /*!
+     * \brief destroy the object
+     */
+    ~variant() { destroy(); }
+
+    /*!
+     * \brief create an object in this object
+     *
+     * \tparam created_type type of the object to create
+     * \tparam arg_types types of args
+     * \param args arguments of constructor
+     * \return created_type& created object
+     */
+    template <typename created_type, typename... arg_types>
+    created_type& emplace(arg_types&&... args) {
+        constexpr std::size_t index =
+            helper::template type_index<created_type>();
+        static_assert(index != invalid_index(), "invalid type");
+
+        destroy();
+        // next line may throw an exception
+        impl::create<created_type, arg_types...>(void_ptr(), args...);
+        _index = index;
+        return get_no_check<created_type>();
+    }
+
+private:
+    /*!
+     * \brief get void pointer of data
+     *
+     * \return void* void pointer
+     */
+    void* void_ptr() noexcept { return _storage.void_ptr(); }
+
+    /*!
+     * \brief destroy the object
+     */
+    void destroy() noexcept { helper::destroy(_index, void_ptr()); }
+
+    /*!
+     * \brief get object without check
+     *
+     * \tparam type type to get
+     * \return type& object
+     */
+    template <typename type>
+    type& get_no_check() {
+        return *static_cast<type*>(void_ptr());
+    }
+};
 
 }  // namespace variant_cpp11
