@@ -128,4 +128,21 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }
+
+    SECTION("emplace and destruct with multiple types") {
+        using test_type =
+            variant_cpp11::variant<int, std::string, object_count>;
+        std::shared_ptr<test_type> ptr;
+        REQUIRE_NOTHROW(ptr = std::make_shared<test_type>());
+        REQUIRE(ptr->emplace<int>(5) == 5);
+        REQUIRE(object_count::count == 0);
+        REQUIRE_NOTHROW(ptr->emplace<object_count>());
+        REQUIRE(object_count::count == 1);
+        // cast is needed to prevent annoying warnings
+        REQUIRE(ptr->emplace<std::string>(static_cast<const char*>("abc")) ==
+            "abc");
+        REQUIRE(object_count::count == 0);
+        REQUIRE_NOTHROW(ptr.reset());
+        REQUIRE(object_count::count == 0);
+    }
 }
