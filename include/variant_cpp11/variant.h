@@ -344,12 +344,15 @@ public:
      * \brief construct with an object
      *
      * \tparam type type of the object to create in this object
-     * \param obj object to copy from
+     * \param obj object to copy or move from
      */
     template <typename type>
     // NOLINTNEXTLINE(hicpp-member-init,google-explicit-constructor,hicpp-explicit-conversions)
-    variant(const type& obj) : variant() {
-        emplace<type>(obj);
+    variant(type&& obj) : variant() {
+        constexpr std::size_t type_index =
+            helper::template assigning_type_index<type>();
+        emplace<typename helper::template index_type<type_index>>(
+            std::forward<type>(obj));
     }
 
     //! \todo implementation
@@ -382,7 +385,8 @@ public:
 
         destroy();
         // next line may throw an exception
-        impl::create<created_type, arg_types...>(void_ptr(), args...);
+        impl::create<created_type, arg_types...>(
+            void_ptr(), std::forward<arg_types>(args)...);
         _index = index;
         return get_no_check<created_type>();
     }

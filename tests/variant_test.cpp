@@ -31,23 +31,27 @@ namespace {
 struct object_count {
     static int count;
 
-    object_count() noexcept { ++count; }
-    explicit object_count(int /*unused*/) noexcept { ++count; }
+    int my_val;
 
-    object_count(const object_count& /*unused*/) noexcept { ++count; }
-    object_count(object_count&& /*unused*/) noexcept { ++count; }
+    object_count() noexcept : my_val(1) { ++count; }
+    explicit object_count(int /*unused*/) noexcept : my_val(1) { ++count; }
+
+    object_count(const object_count& /*unused*/) noexcept : my_val(1) {
+        ++count;
+    }
+    object_count(object_count&& obj) noexcept : my_val(1) { obj.my_val = 0; }
 
     // NOLINTNEXTLINE(cert-oop54-cpp)
     object_count& operator=(const object_count& /*unused*/) noexcept {
-        ++count;
         return *this;
     }
-    object_count& operator=(object_count&& /*unused*/) noexcept {
-        ++count;
+    object_count& operator=(object_count&& obj) noexcept {
+        --count;
+        obj.my_val = 0;
         return *this;
     }
 
-    ~object_count() { --count; }
+    ~object_count() { count -= my_val; }
 };
 
 int object_count::count = 0;
@@ -55,6 +59,8 @@ int object_count::count = 0;
 }  // namespace
 
 TEST_CASE("variant_cpp11::variant") {
+    object_count::count = 0;
+
     SECTION("no type") {
         std::shared_ptr<variant_cpp11::variant<>> ptr;
         REQUIRE_NOTHROW(ptr = std::make_shared<variant_cpp11::variant<>>());
@@ -81,6 +87,19 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 2);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 1);
+    }
+
+    SECTION("move construct from an object and destruct with one type") {
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
+        REQUIRE(object_count::count == 0);
+        object_count obj;
+        REQUIRE(object_count::count == 1);
+        REQUIRE_NOTHROW(
+            ptr = std::make_shared<variant_cpp11::variant<object_count>>(
+                std::move(obj)));
+        REQUIRE(object_count::count == 1);
+        REQUIRE_NOTHROW(ptr.reset());
+        REQUIRE(object_count::count == 0);
     }
 
     SECTION("emplace and destruct with one type") {
