@@ -167,6 +167,19 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 0);
     }
 
+    SECTION("get value") {
+        using test_type = variant_cpp11::variant<int, std::string>;
+        std::shared_ptr<test_type> ptr;
+        REQUIRE_NOTHROW(ptr = std::make_shared<test_type>());
+        std::shared_ptr<const test_type> const_ptr = ptr;
+
+        REQUIRE(ptr->emplace<int>(5) == 5);
+        REQUIRE(ptr->get<0>() == 5);
+        REQUIRE(const_ptr->get<0>() == 5);
+        REQUIRE_THROWS(ptr->get<1>());
+        REQUIRE_THROWS(const_ptr->get<1>());
+    }
+
     SECTION("selection of correct types") {
         using test_type = variant_cpp11::variant<std::string, char*>;
         std::shared_ptr<test_type> ptr;

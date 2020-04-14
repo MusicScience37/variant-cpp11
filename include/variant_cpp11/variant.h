@@ -25,6 +25,7 @@
 
 #include <cstddef>
 #include <limits>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -133,6 +134,15 @@ struct variant_storage {
      * \return void* void pointer of data
      */
     void* void_ptr() noexcept { return static_cast<void*>(data); }
+
+    /*!
+     * \brief get void pointer of data
+     *
+     * \return const void* void pointer of data
+     */
+    const void* void_ptr() const noexcept {
+        return static_cast<const void*>(data);
+    }
 };
 
 /*!
@@ -428,6 +438,39 @@ public:
     }
 
     /*!
+     * \brief get value
+     *
+     * \tparam type_index index of the type to get
+     * \return type& value
+     */
+    template <std::size_t type_index>
+    auto get() -> typename helper::template index_type<type_index>& {
+        using type = typename helper::template index_type<type_index>;
+
+        if (type_index != _index) {
+            throw std::runtime_error("wrong index");
+        }
+        return get_no_check<type>();
+    }
+
+    /*!
+     * \brief get value
+     *
+     * \tparam type_index index of the type to get
+     * \return const type& value
+     */
+    template <std::size_t type_index>
+    auto get() const -> const
+        typename helper::template index_type<type_index>& {
+        using type = typename helper::template index_type<type_index>;
+
+        if (type_index != _index) {
+            throw std::runtime_error("wrong index");
+        }
+        return get_no_check<type>();
+    }
+
+    /*!
      * \brief get index of type stored in this object
      *
      * \return std::size_t index of type from 0 in template parameters
@@ -444,6 +487,13 @@ private:
     void* void_ptr() noexcept { return _storage.void_ptr(); }
 
     /*!
+     * \brief get void pointer of data
+     *
+     * \return const void* void pointer
+     */
+    const void* void_ptr() const noexcept { return _storage.void_ptr(); }
+
+    /*!
      * \brief destroy the object
      */
     void destroy() noexcept { helper::destroy(_index, void_ptr()); }
@@ -455,8 +505,19 @@ private:
      * \return type& object
      */
     template <typename type>
-    type& get_no_check() {
+    type& get_no_check() noexcept {
         return *static_cast<type*>(void_ptr());
+    }
+
+    /*!
+     * \brief get object without check
+     *
+     * \tparam type type to get
+     * \return const type& object
+     */
+    template <typename type>
+    const type& get_no_check() const noexcept {
+        return *static_cast<const type*>(void_ptr());
     }
 };
 
