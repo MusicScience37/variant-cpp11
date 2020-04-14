@@ -177,4 +177,19 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_NOTHROW(ptr = std::make_shared<test_type>(const_char_array));
         REQUIRE(ptr->index() == 0);
     }
+
+    SECTION("use of multiple same types") {
+        using test_type = variant_cpp11::variant<int, int>;
+        std::shared_ptr<test_type> ptr;
+        REQUIRE_NOTHROW(ptr = std::make_shared<test_type>());
+
+        REQUIRE(ptr->emplace<int>(5) == 5);
+        REQUIRE(ptr->index() == 0);
+
+        REQUIRE(ptr->emplace<0>(37) == 37);
+        REQUIRE(ptr->index() == 0);
+
+        REQUIRE(ptr->emplace<1>(37) == 37);
+        REQUIRE(ptr->index() == 1);
+    }
 }

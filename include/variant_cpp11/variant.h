@@ -395,16 +395,12 @@ public:
      */
     template <typename created_type, typename... arg_types>
     created_type& emplace(arg_types&&... args) {
-        constexpr std::size_t index =
+        constexpr std::size_t created_type_index =
             helper::template type_index<created_type>();
-        static_assert(index != invalid_index(), "invalid type");
+        static_assert(created_type_index != invalid_index(), "invalid type");
 
-        destroy();
-        // next line may throw an exception
-        impl::create<created_type, arg_types...>(
-            void_ptr(), std::forward<arg_types>(args)...);
-        _index = index;
-        return get_no_check<created_type>();
+        return emplace<created_type_index, arg_types...>(
+            std::forward<arg_types>(args)...);
     }
 
     /*!
@@ -418,8 +414,17 @@ public:
     template <std::size_t created_type_index, typename... arg_types>
     auto emplace(arg_types&&... args) ->
         typename helper::template index_type<created_type_index>& {
-        return emplace<typename helper::template index_type<created_type_index>>(
-            std::forward<arg_types>(args)...);
+        using created_type =
+            typename helper::template index_type<created_type_index>;
+        static_assert(
+            !std::is_same<created_type, invalid_type>::value, "invalid index");
+
+        destroy();
+        // next line may throw an exception
+        impl::create<created_type, arg_types...>(
+            void_ptr(), std::forward<arg_types>(args)...);
+        _index = created_type_index;
+        return get_no_check<created_type>();
     }
 
     /*!
