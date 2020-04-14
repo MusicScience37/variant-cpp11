@@ -471,6 +471,36 @@ public:
     }
 
     /*!
+     * \brief get value
+     *
+     * \tparam type type to get
+     * \return type& value
+     */
+    template <typename type>
+    type& get() {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        if (type_index != _index) {
+            throw std::runtime_error("wrong type");
+        }
+        return get_no_check<type>();
+    }
+
+    /*!
+     * \brief get value
+     *
+     * \tparam type type to get
+     * \return const type& value
+     */
+    template <typename type>
+    const type& get() const {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        if (type_index != _index) {
+            throw std::runtime_error("wrong type");
+        }
+        return get_no_check<type>();
+    }
+
+    /*!
      * \brief get index of type stored in this object
      *
      * \return std::size_t index of type from 0 in template parameters

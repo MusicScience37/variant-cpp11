@@ -178,6 +178,11 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(const_ptr->get<0>() == 5);
         REQUIRE_THROWS(ptr->get<1>());
         REQUIRE_THROWS(const_ptr->get<1>());
+
+        REQUIRE(ptr->get<int>() == 5);
+        REQUIRE(const_ptr->get<int>() == 5);
+        REQUIRE_THROWS(ptr->get<std::string>());
+        REQUIRE_THROWS(const_ptr->get<std::string>());
     }
 
     SECTION("selection of correct types") {
