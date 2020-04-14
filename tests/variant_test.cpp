@@ -64,6 +64,7 @@ TEST_CASE("variant_cpp11::variant") {
     SECTION("no type") {
         std::shared_ptr<variant_cpp11::variant<>> ptr;
         REQUIRE_NOTHROW(ptr = std::make_shared<variant_cpp11::variant<>>());
+        REQUIRE(ptr->index() == variant_cpp11::invalid_index());
         REQUIRE_NOTHROW(ptr.reset());
     }
 
@@ -73,6 +74,7 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_NOTHROW(
             ptr = std::make_shared<variant_cpp11::variant<object_count>>());
         REQUIRE(object_count::count == 0);
+        REQUIRE(ptr->index() == variant_cpp11::invalid_index());
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }
@@ -84,6 +86,7 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 1);
         REQUIRE_NOTHROW(
             ptr = std::make_shared<variant_cpp11::variant<object_count>>(obj));
+        REQUIRE(ptr->index() == 0);
         REQUIRE(object_count::count == 2);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 1);
@@ -98,6 +101,7 @@ TEST_CASE("variant_cpp11::variant") {
             ptr = std::make_shared<variant_cpp11::variant<object_count>>(
                 std::move(obj)));
         REQUIRE(object_count::count == 1);
+        REQUIRE(ptr->index() == 0);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }
@@ -110,6 +114,7 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 0);
         REQUIRE_NOTHROW(ptr->emplace<object_count>());
         REQUIRE(object_count::count == 1);
+        REQUIRE(ptr->index() == 0);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }
@@ -123,8 +128,10 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 1);
         REQUIRE_NOTHROW(*ptr = obj);
         REQUIRE(object_count::count == 2);
+        REQUIRE(ptr->index() == 0);
         REQUIRE_NOTHROW(*ptr = std::move(obj));
         REQUIRE(object_count::count == 1);
+        REQUIRE(ptr->index() == 0);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }
@@ -136,12 +143,15 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_NOTHROW(ptr = std::make_shared<test_type>());
         REQUIRE(ptr->emplace<int>(5) == 5);
         REQUIRE(object_count::count == 0);
+        REQUIRE(ptr->index() == 0);
         REQUIRE_NOTHROW(ptr->emplace<object_count>());
         REQUIRE(object_count::count == 1);
+        REQUIRE(ptr->index() == 2);
         // cast is needed to prevent annoying warnings
         REQUIRE(ptr->emplace<std::string>(static_cast<const char*>("abc")) ==
             "abc");
         REQUIRE(object_count::count == 0);
+        REQUIRE(ptr->index() == 1);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }

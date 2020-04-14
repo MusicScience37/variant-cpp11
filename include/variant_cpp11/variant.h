@@ -407,6 +407,14 @@ public:
         return get_no_check<created_type>();
     }
 
+    /*!
+     * \brief get index of type stored in this object
+     *
+     * \return std::size_t index of type from 0 in template parameters
+     *         or invalid_index() if no value is stored
+     */
+    std::size_t index() const noexcept { return _index; }
+
 private:
     /*!
      * \brief get void pointer of data
