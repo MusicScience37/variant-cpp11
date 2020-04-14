@@ -142,15 +142,27 @@ TEST_CASE("variant_cpp11::variant") {
             variant_cpp11::variant<int, std::string, object_count>;
         std::shared_ptr<test_type> ptr;
         REQUIRE_NOTHROW(ptr = std::make_shared<test_type>());
+
         REQUIRE(ptr->emplace<int>(5) == 5);
         REQUIRE(object_count::count == 0);
         REQUIRE(ptr->index() == 0);
+
         REQUIRE_NOTHROW(ptr->emplace<object_count>());
         REQUIRE(object_count::count == 1);
         REQUIRE(ptr->index() == 2);
+
         REQUIRE(ptr->emplace<std::string>("abc") == "abc");
         REQUIRE(object_count::count == 0);
         REQUIRE(ptr->index() == 1);
+
+        REQUIRE_NOTHROW(ptr->emplace<2>());
+        REQUIRE(object_count::count == 1);
+        REQUIRE(ptr->index() == 2);
+
+        REQUIRE(ptr->emplace<0>(37) == 37);
+        REQUIRE(object_count::count == 0);
+        REQUIRE(ptr->index() == 0);
+
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
     }

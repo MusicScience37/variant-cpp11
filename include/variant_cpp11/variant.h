@@ -408,6 +408,21 @@ public:
     }
 
     /*!
+     * \brief create an object in this object
+     *
+     * \tparam created_type_index index of type of the object to create
+     * \tparam arg_types types of args
+     * \param args arguments of constructor
+     * \return created_type& created object
+     */
+    template <std::size_t created_type_index, typename... arg_types>
+    auto emplace(arg_types&&... args) ->
+        typename helper::template index_type<created_type_index>& {
+        return emplace<typename helper::template index_type<created_type_index>>(
+            std::forward<arg_types>(args)...);
+    }
+
+    /*!
      * \brief get index of type stored in this object
      *
      * \return std::size_t index of type from 0 in template parameters
