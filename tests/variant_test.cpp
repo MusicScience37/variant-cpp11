@@ -25,6 +25,7 @@
 
 #include <catch2/catch.hpp>
 #include <memory>
+#include <string>
 
 namespace {
 
@@ -147,12 +148,21 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_NOTHROW(ptr->emplace<object_count>());
         REQUIRE(object_count::count == 1);
         REQUIRE(ptr->index() == 2);
-        // cast is needed to prevent annoying warnings
-        REQUIRE(ptr->emplace<std::string>(static_cast<const char*>("abc")) ==
-            "abc");
+        REQUIRE(ptr->emplace<std::string>("abc") == "abc");
         REQUIRE(object_count::count == 0);
         REQUIRE(ptr->index() == 1);
         REQUIRE_NOTHROW(ptr.reset());
         REQUIRE(object_count::count == 0);
+    }
+
+    SECTION("selection of correct types") {
+        using test_type = variant_cpp11::variant<std::string, char*>;
+        std::shared_ptr<test_type> ptr;
+        char char_array[] = "abc";
+        REQUIRE_NOTHROW(ptr = std::make_shared<test_type>(char_array));
+        REQUIRE(ptr->index() == 1);
+        const char const_char_array[] = "abc";
+        REQUIRE_NOTHROW(ptr = std::make_shared<test_type>(const_char_array));
+        REQUIRE(ptr->index() == 0);
     }
 }
