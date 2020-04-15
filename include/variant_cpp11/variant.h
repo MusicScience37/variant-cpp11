@@ -357,7 +357,6 @@ public:
      * \param obj object to copy or move from
      */
     template <typename type>
-    // NOLINTNEXTLINE(google-explicit-constructor,hicpp-explicit-conversions)
     variant(type&& obj) : variant() {
         constexpr std::size_t type_index =
             helper::template assigning_type_index<type>();
