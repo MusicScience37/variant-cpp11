@@ -28,8 +28,10 @@
  */
 
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -55,6 +57,55 @@ inline constexpr std::size_t invalid_index() {
  * \brief struct to specify invalid types
  */
 struct invalid_type {};
+
+/*!
+ * \brief exception of variant
+ */
+class variant_error : public std::runtime_error {
+public:
+    /*!
+     * \brief constructor with an error message
+     *
+     * \param message error message
+     */
+    variant_error(const char* message) : std::runtime_error(message) {}
+
+    /*!
+     * \brief constructor with an error message
+     *
+     * \param message error message
+     */
+    variant_error(const std::string& message) : std::runtime_error(message) {}
+
+    /*!
+     * \brief copy constructor
+     */
+    variant_error(const variant_error&) noexcept = default;
+
+    /*!
+     * \brief move constructor
+     */
+    variant_error(variant_error&&) noexcept = default;
+
+    /*!
+     * \brief copy assignment operator
+     *
+     * \return variant_error& this object
+     */
+    variant_error& operator=(const variant_error&) noexcept = default;
+
+    /*!
+     * \brief move assignment operator
+     *
+     * \return variant_error& this object
+     */
+    variant_error& operator=(variant_error&&) noexcept = default;
+
+    /*!
+     * \brief virtual destructor
+     */
+    ~variant_error() override = default;
+};
 
 /*!
  * \brief namespace of implementation details
@@ -179,7 +230,32 @@ inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
 template <typename creating_type, typename... arg_types>
 inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
     !std::is_constructible<creating_type, arg_types...>::value>::type {
-    throw std::runtime_error("cannot call constructor of an object");
+    throw variant_error("cannot call constructor of an object");
+}
+
+/*!
+ * \brief check whether two values in pointers are same
+ *
+ * \tparam type type of values
+ * \param left the pointer to a value
+ * \param right the pointer to a value
+ * \return bool whether two values in pointers are same
+ */
+template <typename type>
+inline auto equal(const void* left, const void* right)
+    -> decltype(std::declval<type>() == std::declval<type>(), bool()) {
+    return *static_cast<const type*>(left) == *static_cast<const type*>(right);
+}
+
+/*!
+ * \brief check whether two values in pointers are same
+ *
+ * \return bool no value (always throws an exception)
+ */
+template <typename type>
+// NOLINTNEXTLINE(cert-dcl50-cpp): required for SFINAE
+inline auto equal(...) -> bool {
+    throw variant_error("cannot compare the values");
 }
 
 /*!
@@ -315,6 +391,21 @@ struct variant_helper<front_index, front_type, remaining_types...> {
             remaining_helper::destroy(index, ptr);
         }
     }
+
+    /*!
+     * \brief check equality of two values
+     *
+     * \param index index of type
+     * \param left the pointer to a value
+     * \param right the pointer to a value
+     * \return bool whether two value is equal
+     */
+    static bool equal(std::size_t index, const void* left, const void* right) {
+        if (index == front_index) {
+            return impl::equal<front_type>(left, right);
+        }
+        return remaining_helper::equal(index, left, right);
+    }
 };
 
 /*!
@@ -401,6 +492,18 @@ struct variant_helper<front_index> {
      * \param ptr pointer
      */
     static void destroy(std::size_t index, void* ptr) noexcept {}
+
+    /*!
+     * \brief check equality of two values
+     *
+     * \param index index of type
+     * \param left the pointer to a value
+     * \param right the pointer to a value
+     * \return bool whether two value is equal
+     */
+    static bool equal(std::size_t index, const void* left, const void* right) {
+        return true;
+    }
 };
 
 }  // namespace impl
@@ -431,6 +534,11 @@ private:
 public:
     //! default constructor (create invalid object)
     variant() noexcept : _storage(), _index(invalid_index()) {}
+
+    /*!
+     * \name Copy and Move Functions
+     */
+    ///@{
 
     /*!
      * \brief copy constructor
@@ -486,6 +594,18 @@ public:
         return *this;
     }
 
+    ///@}
+
+    /*!
+     * \brief destroy the object
+     */
+    ~variant() { destroy(); }
+
+    /*!
+     * \name Assign Objects
+     */
+    ///@{
+
     /*!
      * \brief construct with an object
      *
@@ -520,11 +640,6 @@ public:
             std::forward<type>(obj));
         return *this;
     }
-
-    /*!
-     * \brief destroy the object
-     */
-    ~variant() { destroy(); }
 
     /*!
      * \brief create an object in this object
@@ -570,6 +685,29 @@ public:
         return get_no_check<created_type>();
     }
 
+    ///@}
+
+    /*!
+     * \name Get Values
+     */
+    ///@{
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type_index index of the type to get
+     * \return type* pointer to the value if possible, otherwise nullptr
+     */
+    template <std::size_t type_index>
+    auto get_if() -> typename helper::template index_type<type_index>* {
+        using type = typename helper::template index_type<type_index>;
+
+        if (type_index != _index) {
+            return nullptr;
+        }
+        return &get_no_check<type>();
+    }
+
     /*!
      * \brief get value
      *
@@ -578,12 +716,28 @@ public:
      */
     template <std::size_t type_index>
     auto get() -> typename helper::template index_type<type_index>& {
+        auto ptr = get_if<type_index>();
+        if (ptr == nullptr) {
+            throw variant_error("wrong index");
+        }
+        return *ptr;
+    }
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type_index index of the type to get
+     * \return const type* pointer to the value if possible, otherwise nullptr
+     */
+    template <std::size_t type_index>
+    auto get_if() const -> const
+        typename helper::template index_type<type_index>* {
         using type = typename helper::template index_type<type_index>;
 
         if (type_index != _index) {
-            throw std::runtime_error("wrong index");
+            return nullptr;
         }
-        return get_no_check<type>();
+        return &get_no_check<type>();
     }
 
     /*!
@@ -595,12 +749,23 @@ public:
     template <std::size_t type_index>
     auto get() const -> const
         typename helper::template index_type<type_index>& {
-        using type = typename helper::template index_type<type_index>;
-
-        if (type_index != _index) {
-            throw std::runtime_error("wrong index");
+        auto ptr = get_if<type_index>();
+        if (ptr == nullptr) {
+            throw variant_error("wrong index");
         }
-        return get_no_check<type>();
+        return *ptr;
+    }
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type type to get
+     * \return type* pointer to the value if possible, otherwise nullptr
+     */
+    template <typename type>
+    type* get_if() {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        return get_if<type_index>();
     }
 
     /*!
@@ -611,11 +776,23 @@ public:
      */
     template <typename type>
     type& get() {
-        constexpr std::size_t type_index = helper::template type_index<type>();
-        if (type_index != _index) {
-            throw std::runtime_error("wrong type");
+        auto ptr = get_if<type>();
+        if (ptr == nullptr) {
+            throw variant_error("wrong type");
         }
-        return get_no_check<type>();
+        return *ptr;
+    }
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type type to get
+     * \return const type* pointer to the value if possible, otherwise nullptr
+     */
+    template <typename type>
+    const type* get_if() const {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        return get_if<type_index>();
     }
 
     /*!
@@ -626,12 +803,19 @@ public:
      */
     template <typename type>
     const type& get() const {
-        constexpr std::size_t type_index = helper::template type_index<type>();
-        if (type_index != _index) {
-            throw std::runtime_error("wrong type");
+        auto ptr = get_if<type>();
+        if (ptr == nullptr) {
+            throw variant_error("wrong type");
         }
-        return get_no_check<type>();
+        return *ptr;
     }
+
+    ///@}
+
+    /*!
+     * \name Check Stored Data
+     */
+    ///@{
 
     /*!
      * \brief get index of type stored in this object
@@ -640,6 +824,123 @@ public:
      *         or invalid_index() if no value is stored
      */
     std::size_t index() const noexcept { return _index; }
+
+    /*!
+     * \brief check whether this object has a value
+     *
+     * \return bool whether this object has a value
+     */
+    bool has_value() const noexcept { return _index != invalid_index(); }
+
+    /*!
+     * \brief check whether this object has a value
+     *
+     * \return bool whether this object has a value
+     */
+    explicit operator bool() const noexcept { return has_value(); }
+
+    /*!
+     * \brief check whether this object has a value of the given type
+     *
+     * \tparam type type to check
+     * \return bool whether this object has a value of the given type
+     */
+    template <typename type>
+    bool has() const noexcept {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        return _index == type_index;
+    }
+
+    ///@}
+
+    /*!
+     * \name Execute Functions with Variant
+     */
+    ///@{
+
+    /*!
+     * \brief execute a function using the stored value
+     *
+     * \tparam function_type type of function
+     * \param function function to execute
+     * \return return value from the function
+     */
+    template <typename function_type>
+    auto visit(function_type&& function)
+        -> decltype(std::declval<function_type>()(
+            std::declval<typename helper::template index_type<0>>())) {
+        using return_type = decltype(std::declval<function_type>()(
+            std::declval<typename helper::template index_type<0>>()));
+
+        using executor_type = return_type (*)(function_type&&, void*);
+        static const executor_type executors[] = {
+            [](function_type&& function, void* data) -> return_type {
+                return function(*static_cast<stored_types*>(data));
+            }...};
+
+        if (_index >= sizeof...(stored_types)) {
+            throw variant_error("visit called for invalid object");
+        }
+        return executors[_index](
+            std::forward<function_type>(function), void_ptr());
+    }
+
+    /*!
+     * \brief execute a function using the stored value
+     *
+     * \tparam function_type type of function
+     * \param function function to execute
+     * \return return value from the function
+     */
+    template <typename function_type>
+    auto visit(function_type&& function) const
+        -> decltype(std::declval<function_type>()(
+            std::declval<typename helper::template index_type<0>>())) {
+        using return_type = decltype(std::declval<function_type>()(
+            std::declval<typename helper::template index_type<0>>()));
+
+        using executor_type = return_type (*)(function_type&&, const void*);
+        static const executor_type executors[] = {
+            [](function_type&& function, const void* data) -> return_type {
+                return function(*static_cast<const stored_types*>(data));
+            }...};
+
+        if (_index >= sizeof...(stored_types)) {
+            throw variant_error("visit called for invalid object");
+        }
+        return executors[_index](
+            std::forward<function_type>(function), void_ptr());
+    }
+
+    ///@}
+
+    /*!
+     * \name Comparison
+     */
+    ///@{
+
+    /*!
+     * \brief check whether two values in variant objects are same
+     *
+     * \param right another object to compare with this object
+     * \return bool whether two values in variant objects are same
+     */
+    bool operator==(const variant& right) const {
+        if (_index != right._index) {
+            return false;
+        }
+        return helper::equal(_index, void_ptr(), right.void_ptr());
+    }
+
+    /*!
+     * \brief check whether two values in variant objects are different
+     *
+     * \param right another object to compare with this object
+     * \return bool whether two values in variant objects are different
+     */
+    bool operator!=(const variant& right) const { return !operator==(right); }
+
+    ///@}
 
 private:
     /*!
@@ -684,4 +985,133 @@ private:
     }
 };
 
+namespace impl {
+
+/*!
+ * \brief helper class for hash of variant
+ *
+ * \tparam front_index index of the first type in template parameters
+ * \tparam types types in variant
+ */
+template <std::size_t front_index, typename... types>
+class hash_helper;
+
+/*!
+ * \brief helper class for hash of variant
+ *
+ * \tparam front_index index of front_type
+ * \tparam front_type first type
+ * \tparam remaining_types remaining types
+ */
+template <std::size_t front_index, typename front_type,
+    typename... remaining_types>
+class hash_helper<front_index, front_type, remaining_types...> {
+private:
+    //! hash_helper of remaining types
+    using remaining_helper = hash_helper<front_index + 1, remaining_types...>;
+
+    //! helper object of remaining types
+    remaining_helper _remaining_helper;
+
+    //! hash object
+    std::hash<front_type> _hash;
+
+public:
+    //! default constructor
+    hash_helper() : _remaining_helper(), _hash() {}
+
+    /*!
+     * \brief calculate hash number
+     *
+     * \tparam variant_type type of variant object
+     * \param index index of type
+     * \param object variant object
+     * \return std::size_t hash number
+     */
+    template <typename variant_type>
+    std::size_t operator()(
+        std::size_t index, const variant_type& object) const {
+        if (index == front_index) {
+            return front_index + _hash(object.template get<front_index>());
+        }
+        return _remaining_helper(index, object);
+    }
+};
+
+/*!
+ * \brief hash_helper for no type
+ *
+ * \tparam front_index index
+ */
+template <std::size_t front_index>
+class hash_helper<front_index> {
+public:
+    /*!
+     * \brief calculate hash number
+     *
+     * \tparam variant_type type of variant object
+     * \param index index of type
+     * \param object variant object
+     * \return std::size_t hash number
+     */
+    template <typename variant_type>
+    std::size_t operator()(std::size_t index, const variant_type& object) const
+        noexcept {
+        return invalid_index();
+    }
+};
+
+/*!
+ * \brief class of hash function of variant
+ *
+ * \tparam stored_types stored types
+ */
+template <typename... stored_types>
+class variant_hash {
+private:
+    //! type of helper class
+    using helper = hash_helper<0, stored_types...>;
+
+    //! helper object
+    helper _helper;
+
+public:
+    //! default constructor
+    variant_hash() : _helper() {}
+
+    /*!
+     * \brief calculate hash number
+     *
+     * \param object variant object
+     * \return std::size_t hash number
+     */
+    std::size_t operator()(const variant<stored_types...>& object) const {
+        return _helper(object.index(), object);
+    }
+};
+
+}  // namespace impl
+
 }  // namespace variant_cpp11
+
+/*!
+ * \brief namespace of the C++ standard library
+ */
+namespace std {
+
+/*!
+ * \brief std::hash for variant
+ *
+ * \tparam stored_types stored types in variant
+ */
+template <typename... stored_types>
+struct hash<variant_cpp11::variant<stored_types...>>
+    : public variant_cpp11::impl::variant_hash<stored_types...> {
+    //! type of arguments
+    using argument_type = variant_cpp11::variant<stored_types...>;
+
+    //! type of return values
+    using result_type = std::size_t;
+};
+
+}  // namespace std

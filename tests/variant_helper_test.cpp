@@ -156,4 +156,31 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         test_helper::destroy(1, to.void_ptr());
         REQUIRE(object_count::count == 0);
     }
+
+    SECTION("equal") {
+        using test_helper = variant_helper<0, float, object_count, int>;
+        using test_storage = variant_storage<float, object_count, int>;
+        test_storage left;
+        test_storage right;
+
+        create<int>(left.void_ptr(), 3);
+        create<int>(right.void_ptr(), 3);
+        REQUIRE(
+            test_helper::equal(2, left.void_ptr(), right.void_ptr()) == true);
+        create<int>(right.void_ptr(), 4);
+        REQUIRE(
+            test_helper::equal(2, left.void_ptr(), right.void_ptr()) == false);
+        test_helper::destroy(2, left.void_ptr());
+        test_helper::destroy(2, right.void_ptr());
+
+        create<object_count>(left.void_ptr());
+        create<object_count>(right.void_ptr());
+        REQUIRE_THROWS(
+            test_helper::equal(1, left.void_ptr(), right.void_ptr()));
+        test_helper::destroy(1, left.void_ptr());
+        test_helper::destroy(1, right.void_ptr());
+
+        REQUIRE(
+            test_helper::equal(3, left.void_ptr(), right.void_ptr()) == true);
+    }
 }

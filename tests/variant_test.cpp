@@ -279,14 +279,22 @@ TEST_CASE("variant_cpp11::variant") {
 
         REQUIRE(ptr->emplace<int>(5) == 5);
         REQUIRE(ptr->get<0>() == 5);
+        REQUIRE(ptr->get_if<0>() != nullptr);
         REQUIRE(const_ptr->get<0>() == 5);
+        REQUIRE(const_ptr->get_if<0>() != nullptr);
         REQUIRE_THROWS(ptr->get<1>());
+        REQUIRE(ptr->get_if<1>() == nullptr);
         REQUIRE_THROWS(const_ptr->get<1>());
+        REQUIRE(const_ptr->get_if<1>() == nullptr);
 
         REQUIRE(ptr->get<int>() == 5);
+        REQUIRE(ptr->get_if<int>() != nullptr);
         REQUIRE(const_ptr->get<int>() == 5);
+        REQUIRE(const_ptr->get_if<int>() != nullptr);
         REQUIRE_THROWS(ptr->get<std::string>());
+        REQUIRE(ptr->get_if<std::string>() == nullptr);
         REQUIRE_THROWS(const_ptr->get<std::string>());
+        REQUIRE(const_ptr->get_if<std::string>() == nullptr);
     }
 
     SECTION("selection of correct types") {
@@ -313,5 +321,102 @@ TEST_CASE("variant_cpp11::variant") {
 
         REQUIRE(ptr->emplace<1>(37) == 37);
         REQUIRE(ptr->index() == 1);
+    }
+
+    SECTION("has_value function") {
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
+        REQUIRE_NOTHROW(
+            ptr = std::make_shared<variant_cpp11::variant<object_count>>());
+        REQUIRE(ptr->has_value() == false);
+        REQUIRE_NOTHROW(ptr->emplace<object_count>());
+        REQUIRE(ptr->has_value() == true);
+
+        if (*ptr) {
+            SUCCEED();
+        } else {
+            FAIL();
+        }
+
+        if (!*ptr) {
+            FAIL();
+        } else {
+            SUCCEED();
+        }
+    }
+
+    SECTION("has function") {
+        using test_type = variant_cpp11::variant<int, std::string>;
+        test_type object(5);
+
+        REQUIRE(object.has<int>() == true);
+        REQUIRE(object.has<std::string>() == false);
+
+        object = "abc";
+
+        REQUIRE(object.has<int>() == false);
+        REQUIRE(object.has<std::string>() == true);
+    }
+
+    SECTION("visit") {
+        using test_type = variant_cpp11::variant<int, float>;
+
+        struct visitor {
+            int operator()(int /*unused*/) { return 1; }
+            int operator()(float /*unused*/) { return 2; }
+            int operator()(double /*unused*/) { return 3; }
+        };
+
+        struct void_visitor {
+            void operator()(int /*unused*/) {}
+            void operator()(float /*unused*/) {}
+        };
+
+        test_type object(1.0F);
+        const test_type& const_object = object;
+        REQUIRE(object.visit(visitor()) == 2);
+        REQUIRE(const_object.visit(visitor()) == 2);
+        REQUIRE_NOTHROW(object.visit(void_visitor()));
+        REQUIRE_NOTHROW(const_object.visit(void_visitor()));
+
+        object = 5;
+        REQUIRE(object.visit(visitor()) == 1);
+        REQUIRE(const_object.visit(visitor()) == 1);
+        REQUIRE_NOTHROW(object.visit(void_visitor()));
+        REQUIRE_NOTHROW(const_object.visit(void_visitor()));
+
+        object = test_type();
+        REQUIRE_THROWS(object.visit(visitor()));
+        REQUIRE_THROWS(const_object.visit(visitor()));
+        REQUIRE_THROWS(object.visit(void_visitor()));
+        REQUIRE_THROWS(const_object.visit(void_visitor()));
+    }
+
+    SECTION("comparison") {
+        using test_type = variant_cpp11::variant<int, float, object_count>;
+
+        test_type left = 2;
+        test_type right = 2;
+        REQUIRE(left.operator==(right) == true);
+        REQUIRE(left.operator!=(right) == false);
+
+        left = 2;
+        right = 3;
+        REQUIRE(left.operator==(right) == false);
+        REQUIRE(left.operator!=(right) == true);
+
+        left = 2;
+        right = 2.0F;
+        REQUIRE(left.operator==(right) == false);
+        REQUIRE(left.operator!=(right) == true);
+
+        left = object_count();
+        right = object_count();
+        REQUIRE_THROWS(left.operator==(right));
+        REQUIRE_THROWS(left.operator!=(right));
+
+        left = test_type();
+        right = test_type();
+        REQUIRE(left.operator==(right) == true);
+        REQUIRE(left.operator!=(right) == false);
     }
 }
