@@ -24,35 +24,8 @@
 #include <catch2/catch.hpp>
 #include <cstdint>
 
+#include "object_count.h"
 #include "variant_cpp11/variant.h"
-
-namespace {
-
-struct object_count {
-    static int count;
-
-    object_count() noexcept { ++count; }
-    explicit object_count(int /*unused*/) noexcept { ++count; }
-
-    object_count(const object_count& /*unused*/) noexcept { ++count; }
-    object_count(object_count&& /*unused*/) noexcept { ++count; }
-
-    // NOLINTNEXTLINE(cert-oop54-cpp)
-    object_count& operator=(const object_count& /*unused*/) noexcept {
-        ++count;
-        return *this;
-    }
-    object_count& operator=(object_count&& /*unused*/) noexcept {
-        ++count;
-        return *this;
-    }
-
-    ~object_count() { --count; }
-};
-
-int object_count::count = 0;
-
-}  // namespace
 
 TEST_CASE("variant_cpp11::impl::variant_helper") {
     using variant_cpp11::impl::create;

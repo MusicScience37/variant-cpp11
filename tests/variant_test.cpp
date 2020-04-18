@@ -27,37 +27,7 @@
 #include <memory>
 #include <string>
 
-namespace {
-
-struct object_count {
-    static int count;
-
-    int my_val;
-
-    object_count() noexcept : my_val(1) { ++count; }
-    explicit object_count(int /*unused*/) noexcept : my_val(1) { ++count; }
-
-    object_count(const object_count& /*unused*/) noexcept : my_val(1) {
-        ++count;
-    }
-    object_count(object_count&& obj) noexcept : my_val(1) { obj.my_val = 0; }
-
-    // NOLINTNEXTLINE(cert-oop54-cpp)
-    object_count& operator=(const object_count& /*unused*/) noexcept {
-        return *this;
-    }
-    object_count& operator=(object_count&& obj) noexcept {
-        --count;
-        obj.my_val = 0;
-        return *this;
-    }
-
-    ~object_count() { count -= my_val; }
-};
-
-int object_count::count = 0;
-
-}  // namespace
+#include "object_count.h"
 
 TEST_CASE("variant_cpp11::variant") {
     object_count::count = 0;
