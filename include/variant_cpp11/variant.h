@@ -159,6 +159,7 @@ struct variant_storage {
  * \tparam arg_types types of args
  * \param ptr pointer in which the object is created
  * \param args arguments of constructor
+ * \return no object (enable_if expression will be evaluated to void)
  */
 template <typename creating_type, typename... arg_types>
 inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
@@ -173,6 +174,7 @@ inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
  * \tparam arg_types types of args
  * \param ptr pointer in which the object is created
  * \param args arguments of constructor
+ * \return no object (enable_if expression will be evaluated to void)
  */
 template <typename creating_type, typename... arg_types>
 inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
