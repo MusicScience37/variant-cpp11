@@ -335,4 +335,17 @@ TEST_CASE("variant_cpp11::variant") {
             SUCCEED();
         }
     }
+
+    SECTION("has function") {
+        using test_type = variant_cpp11::variant<int, std::string>;
+        test_type object(5);
+
+        REQUIRE(object.has<int>() == true);
+        REQUIRE(object.has<std::string>() == false);
+
+        object = "abc";
+
+        REQUIRE(object.has<int>() == false);
+        REQUIRE(object.has<std::string>() == true);
+    }
 }

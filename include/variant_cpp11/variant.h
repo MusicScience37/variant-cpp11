@@ -681,6 +681,18 @@ public:
      */
     explicit operator bool() const noexcept { return has_value(); }
 
+    /*!
+     * \brief check whether this object has a value of the given type
+     *
+     * \tparam type type to check
+     * \return bool whether this object has a value of the given type
+     */
+    template <typename type>
+    bool has() const noexcept {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        return _index == type_index;
+    }
+
     ///@}
 
 private:
