@@ -30,6 +30,7 @@
 #include <cstddef>
 #include <limits>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <utility>
 
@@ -55,6 +56,55 @@ inline constexpr std::size_t invalid_index() {
  * \brief struct to specify invalid types
  */
 struct invalid_type {};
+
+/*!
+ * \brief exception of variant
+ */
+class variant_error : public std::runtime_error {
+public:
+    /*!
+     * \brief constructor with an error message
+     *
+     * \param message error message
+     */
+    variant_error(const char* message) : std::runtime_error(message) {}
+
+    /*!
+     * \brief constructor with an error message
+     *
+     * \param message error message
+     */
+    variant_error(const std::string& message) : std::runtime_error(message) {}
+
+    /*!
+     * \brief copy constructor
+     */
+    variant_error(const variant_error&) noexcept = default;
+
+    /*!
+     * \brief move constructor
+     */
+    variant_error(variant_error&&) noexcept = default;
+
+    /*!
+     * \brief copy assignment operator
+     *
+     * \return variant_error& this object
+     */
+    variant_error& operator=(const variant_error&) noexcept = default;
+
+    /*!
+     * \brief move assignment operator
+     *
+     * \return variant_error& this object
+     */
+    variant_error& operator=(variant_error&&) noexcept = default;
+
+    /*!
+     * \brief virtual destructor
+     */
+    ~variant_error() override = default;
+};
 
 /*!
  * \brief namespace of implementation details
@@ -179,7 +229,7 @@ inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
 template <typename creating_type, typename... arg_types>
 inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
     !std::is_constructible<creating_type, arg_types...>::value>::type {
-    throw std::runtime_error("cannot call constructor of an object");
+    throw variant_error("cannot call constructor of an object");
 }
 
 /*!
@@ -600,7 +650,7 @@ public:
         using type = typename helper::template index_type<type_index>;
 
         if (type_index != _index) {
-            throw std::runtime_error("wrong index");
+            throw variant_error("wrong index");
         }
         return get_no_check<type>();
     }
@@ -617,7 +667,7 @@ public:
         using type = typename helper::template index_type<type_index>;
 
         if (type_index != _index) {
-            throw std::runtime_error("wrong index");
+            throw variant_error("wrong index");
         }
         return get_no_check<type>();
     }
@@ -632,7 +682,7 @@ public:
     type& get() {
         constexpr std::size_t type_index = helper::template type_index<type>();
         if (type_index != _index) {
-            throw std::runtime_error("wrong type");
+            throw variant_error("wrong type");
         }
         return get_no_check<type>();
     }
@@ -647,7 +697,7 @@ public:
     const type& get() const {
         constexpr std::size_t type_index = helper::template type_index<type>();
         if (type_index != _index) {
-            throw std::runtime_error("wrong type");
+            throw variant_error("wrong type");
         }
         return get_no_check<type>();
     }
