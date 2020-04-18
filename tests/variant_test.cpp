@@ -397,21 +397,26 @@ TEST_CASE("variant_cpp11::variant") {
         test_type left = 2;
         test_type right = 2;
         REQUIRE(left.operator==(right) == true);
+        REQUIRE(left.operator!=(right) == false);
 
         left = 2;
         right = 3;
         REQUIRE(left.operator==(right) == false);
+        REQUIRE(left.operator!=(right) == true);
 
         left = 2;
         right = 3;
         REQUIRE(left.operator==(right) == false);
+        REQUIRE(left.operator!=(right) == true);
 
         left = object_count();
         right = object_count();
         REQUIRE_THROWS(left.operator==(right));
+        REQUIRE_THROWS(left.operator!=(right));
 
         left = test_type();
         right = test_type();
         REQUIRE(left.operator==(right) == true);
+        REQUIRE(left.operator!=(right) == false);
     }
 }

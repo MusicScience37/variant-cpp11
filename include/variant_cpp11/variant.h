@@ -932,6 +932,14 @@ public:
         return helper::equal(_index, void_ptr(), right.void_ptr());
     }
 
+    /*!
+     * \brief check whether two values in variant objects are different
+     *
+     * \param right another object to compare with this object
+     * \return bool whether two values in variant objects are different
+     */
+    bool operator!=(const variant& right) const { return !operator==(right); }
+
     ///@}
 
 private:
