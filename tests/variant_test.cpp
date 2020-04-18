@@ -364,13 +364,22 @@ TEST_CASE("variant_cpp11::variant") {
         };
 
         test_type object(1.0F);
+        const test_type& const_object = object;
         REQUIRE(object.visit(visitor()) == 2);
+        REQUIRE(const_object.visit(visitor()) == 2);
         REQUIRE_NOTHROW(object.visit(void_visitor()));
+        REQUIRE_NOTHROW(const_object.visit(void_visitor()));
+
         object = 5;
         REQUIRE(object.visit(visitor()) == 1);
+        REQUIRE(const_object.visit(visitor()) == 1);
         REQUIRE_NOTHROW(object.visit(void_visitor()));
+        REQUIRE_NOTHROW(const_object.visit(void_visitor()));
+
         object = test_type();
         REQUIRE_THROWS(object.visit(visitor()));
+        REQUIRE_THROWS(const_object.visit(visitor()));
         REQUIRE_THROWS(object.visit(void_visitor()));
+        REQUIRE_THROWS(const_object.visit(void_visitor()));
     }
 }
