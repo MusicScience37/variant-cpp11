@@ -1,5 +1,7 @@
 find_package(Doxygen REQUIRED dot)
 
+set(DOXYGEN_PROJECT_NAME variant-cpp11)
+
 # range of documentation
 set(DOXYGEN_EXTRACT_ALL NO)
 set(DOXYGEN_EXTRACT_PRIVATE YES)
