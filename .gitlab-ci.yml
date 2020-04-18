@@ -37,7 +37,7 @@ doc:
   stage: Build Documentation
   needs: ["line count"]
   dependencies: []
-  image: registry.gitlab.com/musicscience37_ci/sphinx-doxygen-docker:v1-2
+  image: registry.gitlab.com/musicscience37_ci/sphinx-doxygen-docker:v1-2-1
   script:
     - mkdir build_doc
     - cmake -S ./ -B build_doc
