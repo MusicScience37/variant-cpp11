@@ -46,6 +46,7 @@ static analysis:
   script:
     - cmake -S ./ -B build_static_analysis
       -DVARIANT_CPP11_ENABLE_CLANG_TIDY:BOOL=ON
+      -DVARIANT_CPP11_TESTING:BOOL=ON
     - cmake --build build_static_analysis
       --target variant_cpp11_clang_tidy
     - scripts/check_clang_tidy.sh build_static_analysis/clang_tidy
