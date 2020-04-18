@@ -136,3 +136,17 @@ gcc-8:
   image: registry.gitlab.com/musicscience37_ci/gcc-ci-docker:gcc8-v1-1
   variables:
     BUILD_DIR: build_gcc8
+
+pages:
+  extends: .retry setting
+  stage: Publish
+  needs:
+    - doc
+  dependencies:
+    - doc
+  script:
+    - mv build_doc/doc/doxygen/html public
+  artifacts:
+    paths:
+      - public
+    expire_in: "6 mos"
