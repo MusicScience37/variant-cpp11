@@ -234,6 +234,31 @@ inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
 }
 
 /*!
+ * \brief check whether two values in pointers are same
+ *
+ * \tparam type type of values
+ * \param left the pointer to a value
+ * \param right the pointer to a value
+ * \return bool whether two values in pointers are same
+ */
+template <typename type>
+inline auto equal(const void* left, const void* right)
+    -> decltype(std::declval<type>() == std::declval<type>(), bool()) {
+    return *static_cast<const type*>(left) == *static_cast<const type*>(right);
+}
+
+/*!
+ * \brief check whether two values in pointers are same
+ *
+ * \return bool no value (always throws an exception)
+ */
+template <typename type>
+// NOLINTNEXTLINE(cert-dcl50-cpp): required for SFINAE
+inline auto equal(...) -> bool {
+    throw variant_error("cannot compare the values");
+}
+
+/*!
  * \brief helper struct for variant
  *
  * \tparam front_index index of the first type in template parameters
@@ -366,6 +391,21 @@ struct variant_helper<front_index, front_type, remaining_types...> {
             remaining_helper::destroy(index, ptr);
         }
     }
+
+    /*!
+     * \brief check equality of two values
+     *
+     * \param index index of type
+     * \param left the pointer to a value
+     * \param right the pointer to a value
+     * \return bool whether two value is equal
+     */
+    static bool equal(std::size_t index, const void* left, const void* right) {
+        if (index == front_index) {
+            return impl::equal<front_type>(left, right);
+        }
+        return remaining_helper::equal(index, left, right);
+    }
 };
 
 /*!
@@ -452,6 +492,18 @@ struct variant_helper<front_index> {
      * \param ptr pointer
      */
     static void destroy(std::size_t index, void* ptr) noexcept {}
+
+    /*!
+     * \brief check equality of two values
+     *
+     * \param index index of type
+     * \param left the pointer to a value
+     * \param right the pointer to a value
+     * \return bool whether two value is equal
+     */
+    static bool equal(std::size_t index, const void* left, const void* right) {
+        return true;
+    }
 };
 
 }  // namespace impl
@@ -858,6 +910,26 @@ public:
         }
         return executors[_index](
             std::forward<function_type>(function), void_ptr());
+    }
+
+    ///@}
+
+    /*!
+     * \name Comparison
+     */
+    ///@{
+
+    /*!
+     * \brief check whether two values in variant objects are same
+     *
+     * \param right another object to compare with this object
+     * \return bool whether two values in variant objects are same
+     */
+    bool operator==(const variant& right) const {
+        if (_index != right._index) {
+            return false;
+        }
+        return helper::equal(_index, void_ptr(), right.void_ptr());
     }
 
     ///@}

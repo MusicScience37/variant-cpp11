@@ -390,4 +390,28 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE_THROWS(object.visit(void_visitor()));
         REQUIRE_THROWS(const_object.visit(void_visitor()));
     }
+
+    SECTION("comparison") {
+        using test_type = variant_cpp11::variant<int, float, object_count>;
+
+        test_type left = 2;
+        test_type right = 2;
+        REQUIRE(left.operator==(right) == true);
+
+        left = 2;
+        right = 3;
+        REQUIRE(left.operator==(right) == false);
+
+        left = 2;
+        right = 3;
+        REQUIRE(left.operator==(right) == false);
+
+        left = object_count();
+        right = object_count();
+        REQUIRE_THROWS(left.operator==(right));
+
+        left = test_type();
+        right = test_type();
+        REQUIRE(left.operator==(right) == true);
+    }
 }
