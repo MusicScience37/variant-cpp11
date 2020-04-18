@@ -641,6 +641,22 @@ public:
     ///@{
 
     /*!
+     * \brief get value if possible
+     *
+     * \tparam type_index index of the type to get
+     * \return type* pointer to the value if possible, otherwise nullptr
+     */
+    template <std::size_t type_index>
+    auto get_if() -> typename helper::template index_type<type_index>* {
+        using type = typename helper::template index_type<type_index>;
+
+        if (type_index != _index) {
+            return nullptr;
+        }
+        return &get_no_check<type>();
+    }
+
+    /*!
      * \brief get value
      *
      * \tparam type_index index of the type to get
@@ -648,12 +664,28 @@ public:
      */
     template <std::size_t type_index>
     auto get() -> typename helper::template index_type<type_index>& {
+        auto ptr = get_if<type_index>();
+        if (ptr == nullptr) {
+            throw variant_error("wrong index");
+        }
+        return *ptr;
+    }
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type_index index of the type to get
+     * \return const type* pointer to the value if possible, otherwise nullptr
+     */
+    template <std::size_t type_index>
+    auto get_if() const -> const
+        typename helper::template index_type<type_index>* {
         using type = typename helper::template index_type<type_index>;
 
         if (type_index != _index) {
-            throw variant_error("wrong index");
+            return nullptr;
         }
-        return get_no_check<type>();
+        return &get_no_check<type>();
     }
 
     /*!
@@ -665,12 +697,23 @@ public:
     template <std::size_t type_index>
     auto get() const -> const
         typename helper::template index_type<type_index>& {
-        using type = typename helper::template index_type<type_index>;
-
-        if (type_index != _index) {
+        auto ptr = get_if<type_index>();
+        if (ptr == nullptr) {
             throw variant_error("wrong index");
         }
-        return get_no_check<type>();
+        return *ptr;
+    }
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type type to get
+     * \return type* pointer to the value if possible, otherwise nullptr
+     */
+    template <typename type>
+    type* get_if() {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        return get_if<type_index>();
     }
 
     /*!
@@ -681,11 +724,23 @@ public:
      */
     template <typename type>
     type& get() {
-        constexpr std::size_t type_index = helper::template type_index<type>();
-        if (type_index != _index) {
+        auto ptr = get_if<type>();
+        if (ptr == nullptr) {
             throw variant_error("wrong type");
         }
-        return get_no_check<type>();
+        return *ptr;
+    }
+
+    /*!
+     * \brief get value if possible
+     *
+     * \tparam type type to get
+     * \return const type* pointer to the value if possible, otherwise nullptr
+     */
+    template <typename type>
+    const type* get_if() const {
+        constexpr std::size_t type_index = helper::template type_index<type>();
+        return get_if<type_index>();
     }
 
     /*!
@@ -696,11 +751,11 @@ public:
      */
     template <typename type>
     const type& get() const {
-        constexpr std::size_t type_index = helper::template type_index<type>();
-        if (type_index != _index) {
+        auto ptr = get_if<type>();
+        if (ptr == nullptr) {
             throw variant_error("wrong type");
         }
-        return get_no_check<type>();
+        return *ptr;
     }
 
     ///@}

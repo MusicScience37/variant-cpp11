@@ -279,14 +279,22 @@ TEST_CASE("variant_cpp11::variant") {
 
         REQUIRE(ptr->emplace<int>(5) == 5);
         REQUIRE(ptr->get<0>() == 5);
+        REQUIRE(ptr->get_if<0>() != nullptr);
         REQUIRE(const_ptr->get<0>() == 5);
+        REQUIRE(const_ptr->get_if<0>() != nullptr);
         REQUIRE_THROWS(ptr->get<1>());
+        REQUIRE(ptr->get_if<1>() == nullptr);
         REQUIRE_THROWS(const_ptr->get<1>());
+        REQUIRE(const_ptr->get_if<1>() == nullptr);
 
         REQUIRE(ptr->get<int>() == 5);
+        REQUIRE(ptr->get_if<int>() != nullptr);
         REQUIRE(const_ptr->get<int>() == 5);
+        REQUIRE(const_ptr->get_if<int>() != nullptr);
         REQUIRE_THROWS(ptr->get<std::string>());
+        REQUIRE(ptr->get_if<std::string>() == nullptr);
         REQUIRE_THROWS(const_ptr->get<std::string>());
+        REQUIRE(const_ptr->get_if<std::string>() == nullptr);
     }
 
     SECTION("selection of correct types") {
