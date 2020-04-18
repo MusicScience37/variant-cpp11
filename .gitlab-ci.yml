@@ -140,6 +140,8 @@ gcc-8:
 pages:
   extends: .retry setting
   stage: Publish
+  only:
+    - develop
   needs:
     - doc
   dependencies:
