@@ -641,6 +641,20 @@ public:
      */
     std::size_t index() const noexcept { return _index; }
 
+    /*!
+     * \brief check whether this object has a value
+     *
+     * \return bool whether this object has a value
+     */
+    bool has_value() const noexcept { return _index != invalid_index(); }
+
+    /*!
+     * \brief check whether this object has a value
+     *
+     * \return bool whether this object has a value
+     */
+    explicit operator bool() const noexcept { return has_value(); }
+
 private:
     /*!
      * \brief get void pointer of data

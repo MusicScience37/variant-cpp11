@@ -314,4 +314,25 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(ptr->emplace<1>(37) == 37);
         REQUIRE(ptr->index() == 1);
     }
+
+    SECTION("has_value function") {
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
+        REQUIRE_NOTHROW(
+            ptr = std::make_shared<variant_cpp11::variant<object_count>>());
+        REQUIRE(ptr->has_value() == false);
+        REQUIRE_NOTHROW(ptr->emplace<object_count>());
+        REQUIRE(ptr->has_value() == true);
+
+        if (*ptr) {
+            SUCCEED();
+        } else {
+            FAIL();
+        }
+
+        if (!*ptr) {
+            FAIL();
+        } else {
+            SUCCEED();
+        }
+    }
 }
