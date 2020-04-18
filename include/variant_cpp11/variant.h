@@ -28,6 +28,7 @@
  */
 
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -741,6 +742,40 @@ public:
     bool has() const noexcept {
         constexpr std::size_t type_index = helper::template type_index<type>();
         return _index == type_index;
+    }
+
+    ///@}
+
+    /*!
+     * \name Execute Functions with Variant
+     */
+    ///@{
+
+    /*!
+     * \brief execute a function using the stored value
+     *
+     * \tparam function_type type of function
+     * \param function function to execute
+     * \return return value from the function
+     */
+    template <typename function_type>
+    auto visit(function_type&& function)
+        -> decltype(std::declval<function_type>()(
+            std::declval<typename helper::template index_type<0>>())) {
+        using return_type = decltype(std::declval<function_type>()(
+            std::declval<typename helper::template index_type<0>>()));
+
+        using executor_type = return_type (*)(function_type&&, void*);
+        static const executor_type executors[] = {
+            [](function_type&& function, void* data) -> return_type {
+                return function(*static_cast<stored_types*>(data));
+            }...};
+
+        if (_index >= sizeof...(stored_types)) {
+            throw variant_error("visit called for invalid object");
+        }
+        return executors[_index](
+            std::forward<function_type>(function), void_ptr());
     }
 
     ///@}

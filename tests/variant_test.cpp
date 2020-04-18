@@ -348,4 +348,29 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object.has<int>() == false);
         REQUIRE(object.has<std::string>() == true);
     }
+
+    SECTION("visit") {
+        using test_type = variant_cpp11::variant<int, float>;
+
+        struct visitor {
+            int operator()(int /*unused*/) { return 1; }
+            int operator()(float /*unused*/) { return 2; }
+            int operator()(double /*unused*/) { return 3; }
+        };
+
+        struct void_visitor {
+            void operator()(int /*unused*/) {}
+            void operator()(float /*unused*/) {}
+        };
+
+        test_type object(1.0F);
+        REQUIRE(object.visit(visitor()) == 2);
+        REQUIRE_NOTHROW(object.visit(void_visitor()));
+        object = 5;
+        REQUIRE(object.visit(visitor()) == 1);
+        REQUIRE_NOTHROW(object.visit(void_visitor()));
+        object = test_type();
+        REQUIRE_THROWS(object.visit(visitor()));
+        REQUIRE_THROWS(object.visit(void_visitor()));
+    }
 }
