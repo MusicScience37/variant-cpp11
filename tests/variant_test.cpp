@@ -120,6 +120,41 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 0);
     }
 
+    SECTION("copy") {
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
+        object_count obj;
+        REQUIRE_NOTHROW(
+            ptr = std::make_shared<variant_cpp11::variant<object_count>>(obj));
+        REQUIRE(object_count::count == 2);
+        REQUIRE(ptr->index() == 0);
+
+        // copy constructor
+        std::shared_ptr<variant_cpp11::variant<object_count>> ptr_copy;
+        REQUIRE_NOTHROW(
+            ptr_copy =
+                std::make_shared<variant_cpp11::variant<object_count>>(*ptr));
+        REQUIRE(object_count::count == 3);
+        REQUIRE(ptr_copy->index() == 0);
+
+        // remake empty variant
+        REQUIRE_NOTHROW(ptr_copy.reset());
+        REQUIRE_NOTHROW(
+            ptr_copy =
+                std::make_shared<variant_cpp11::variant<object_count>>());
+        REQUIRE(object_count::count == 2);
+
+        // copy assignment
+        REQUIRE_NOTHROW(*ptr_copy = *ptr);
+        REQUIRE(object_count::count == 3);
+        REQUIRE(ptr_copy->index() == 0);
+
+        // destruct
+        REQUIRE_NOTHROW(ptr_copy.reset());
+        REQUIRE(object_count::count == 2);
+        REQUIRE_NOTHROW(ptr.reset());
+        REQUIRE(object_count::count == 1);
+    }
+
     SECTION("assignment operator with one type") {
         std::shared_ptr<variant_cpp11::variant<object_count>> ptr;
         REQUIRE_NOTHROW(

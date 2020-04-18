@@ -154,8 +154,23 @@ struct variant_storage {
  * \param args arguments of constructor
  */
 template <typename creating_type, typename... arg_types>
-inline void create(void* ptr, arg_types&&... args) {
+inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
+    std::is_constructible<creating_type, arg_types...>::value>::type {
     ::new (ptr) creating_type(std::forward<arg_types>(args)...);
+}
+
+/*!
+ * \brief create a object
+ *
+ * \tparam creating_type type of object to create
+ * \tparam arg_types types of args
+ * \param ptr pointer in which the object is created
+ * \param args arguments of constructor
+ */
+template <typename creating_type, typename... arg_types>
+inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
+    !std::is_constructible<creating_type, arg_types...>::value>::type {
+    throw std::runtime_error("cannot call constructor of an object");
 }
 
 /*!
@@ -247,6 +262,22 @@ struct variant_helper<front_index, front_type, remaining_types...> {
             typename remaining_helper::template index_type<index>>::type;
 
     /*!
+     * \brief copy the object in a pointer
+     *
+     * \param index index of type
+     * \param from buffer to copy from
+     * \param to buffer to copy to (overwritten)
+     */
+    static void copy(std::size_t index, const void* from, void* to) {
+        if (index == front_index) {
+            create<front_type, const front_type&>(
+                to, *static_cast<const front_type*>(from));
+        } else {
+            remaining_helper::copy(index, from, to);
+        }
+    }
+
+    /*!
      * \brief destoy the object in a pointer
      *
      * \param index index of type
@@ -321,6 +352,15 @@ struct variant_helper<front_index> {
     using index_type = invalid_type;
 
     /*!
+     * \brief copy the object in a pointer
+     *
+     * \param index index of type
+     * \param from buffer to copy from
+     * \param to buffer to copy to (overwritten)
+     */
+    static void copy(std::size_t index, const void* from, void* to) {}
+
+    /*!
      * \brief destoy the object in a pointer
      *
      * \param index index of type
@@ -334,6 +374,9 @@ struct variant_helper<front_index> {
 template <typename... stored_types>
 class variant {
 private:
+    //! type of this class
+    using my_type = variant<stored_types...>;
+
     //! helper type
     using helper = impl::variant_helper<0, stored_types...>;
 
@@ -351,15 +394,41 @@ public:
     variant() noexcept : _storage(), _index(invalid_index()) {}
 
     /*!
+     * \brief copy constructor
+     *
+     * \param obj object to copy from
+     */
+    variant(const variant& obj) : variant() {
+        helper::copy(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
+        _index = obj._index;
+    }
+
+    /*!
+     * \brief copy assignment operator
+     *
+     * \param obj object to copy from
+     * \return variant& this object
+     */
+    variant& operator=(const variant& obj) {
+        destroy();
+        helper::copy(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
+        _index = obj._index;
+        return *this;
+    }
+
+    /*!
      * \brief construct with an object
      *
      * \tparam type type of the object to create in this object
      * \param obj object to copy or move from
      */
-    template <typename type>
+    template <typename type,
+        typename = typename std::enable_if<!std::is_same<
+            typename std::decay<type>::type, my_type>::value>::type>
     variant(type&& obj) : variant() {
         constexpr std::size_t type_index =
             helper::template assigning_type_index<type>();
+        static_assert(type_index != invalid_index(), "invalid type");
         emplace<typename helper::template index_type<type_index>>(
             std::forward<type>(obj));
     }
@@ -371,7 +440,9 @@ public:
      * \param obj object to copy or move from
      * \return variant& this object
      */
-    template <typename type>
+    template <typename type,
+        typename = typename std::enable_if<!std::is_same<
+            typename std::decay<type>::type, my_type>::value>::type>
     variant& operator=(type&& obj) {
         constexpr std::size_t type_index =
             helper::template assigning_type_index<type>();
@@ -381,11 +452,7 @@ public:
     }
 
     //! \todo implementation
-    variant(const variant&) = delete;
-    //! \todo implementation
     variant(variant&&) = delete;
-    //! \todo implementation
-    variant& operator=(const variant&) = delete;
     //! \todo implementation
     variant& operator=(variant&&) = delete;
 
@@ -427,6 +494,8 @@ public:
             typename helper::template index_type<created_type_index>;
         static_assert(
             !std::is_same<created_type, invalid_type>::value, "invalid index");
+        static_assert(std::is_constructible<created_type, arg_types...>::value,
+            "cannot call constructor");
 
         destroy();
         // next line may throw an exception
