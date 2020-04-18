@@ -636,7 +636,7 @@ public:
     ///@}
 
     /*!
-     * \name Get Objects
+     * \name Get Values
      */
     ///@{
 
