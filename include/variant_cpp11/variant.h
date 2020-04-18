@@ -410,6 +410,10 @@ public:
      * \return variant& this object
      */
     variant& operator=(const variant& obj) {
+        if (this == &obj) {
+            return *this;
+        }
+
         destroy();
         helper::copy(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
         _index = obj._index;
