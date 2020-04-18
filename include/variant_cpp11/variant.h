@@ -22,6 +22,10 @@
  * SOFTWARE.
  */
 #pragma once
+/*!
+ * \file variant.h
+ * \brief implementation of all classes and functions in variant-cpp11 project
+ */
 
 #include <cstddef>
 #include <limits>
@@ -47,6 +51,9 @@ inline constexpr std::size_t invalid_index() {
     return std::numeric_limits<std::size_t>::max();
 }
 
+/*!
+ * \brief struct to specify invalid types
+ */
 struct invalid_type {};
 
 /*!
@@ -396,6 +403,11 @@ struct variant_helper<front_index> {
 
 }  // namespace impl
 
+/*!
+ * \brief class to store objects of multiple types
+ *
+ * \tparam stored_types types of stored objects
+ */
 template <typename... stored_types>
 class variant {
 private:
