@@ -3,11 +3,11 @@ Checks: >
     clang-diagnostic-*,
     clang-analyzer-*,
     google-*,-google-runtime-references,-google-explicit-constructor,-google-readability-function-size,
-    performance-*,
+    performance-*,-performance-noexcept-move-constructor,
     portability-*,
     readability-*,-readability-magic-numbers,-readability-redundant-member-init,-readability-function-size,
     modernize-*,-modernize-use-trailing-return-type,-modernize-use-default-member-init,-modernize-pass-by-value,-modernize-avoid-c-arrays,
-    hicpp-*,-hicpp-vararg,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,-hicpp-member-init,-hicpp-explicit-conversions,-hicpp-function-size,
+    hicpp-*,-hicpp-vararg,-hicpp-avoid-c-arrays,-hicpp-no-array-decay,-hicpp-member-init,-hicpp-explicit-conversions,-hicpp-function-size,-hicpp-noexcept-move,
     cert-*,
     bugprone-*,
 CheckOptions:

@@ -142,4 +142,18 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         test_helper::destroy(1, to.void_ptr());
         REQUIRE(object_count::count == 0);
     }
+
+    SECTION("move") {
+        using test_helper = variant_helper<0, float, object_count, int>;
+        using test_storage = variant_storage<float, object_count, int>;
+        test_storage from;
+        test_storage to;
+
+        create<object_count>(from.void_ptr());
+        REQUIRE(object_count::count == 1);
+        REQUIRE_NOTHROW(test_helper::move(1, from.void_ptr(), to.void_ptr()));
+        REQUIRE(object_count::count == 1);
+        test_helper::destroy(1, to.void_ptr());
+        REQUIRE(object_count::count == 0);
+    }
 }

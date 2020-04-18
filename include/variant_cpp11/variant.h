@@ -278,6 +278,22 @@ struct variant_helper<front_index, front_type, remaining_types...> {
     }
 
     /*!
+     * \brief move the object in a pointer
+     *
+     * \param index index of type
+     * \param from buffer to move from
+     * \param to buffer to move to (overwritten)
+     */
+    static void move(std::size_t index, void* from, void* to) {
+        if (index == front_index) {
+            create<front_type, front_type&&>(
+                to, std::move(*static_cast<front_type*>(from)));
+        } else {
+            remaining_helper::move(index, from, to);
+        }
+    }
+
+    /*!
      * \brief destoy the object in a pointer
      *
      * \param index index of type
@@ -361,6 +377,15 @@ struct variant_helper<front_index> {
     static void copy(std::size_t index, const void* from, void* to) {}
 
     /*!
+     * \brief move the object in a pointer
+     *
+     * \param index index of type
+     * \param from buffer to move from
+     * \param to buffer to move to (overwritten)
+     */
+    static void move(std::size_t index, void* from, void* to) {}
+
+    /*!
      * \brief destoy the object in a pointer
      *
      * \param index index of type
@@ -421,6 +446,33 @@ public:
     }
 
     /*!
+     * \brief move constructor
+     *
+     * \param obj object to move from
+     */
+    variant(variant&& obj) : variant() {
+        helper::move(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
+        std::swap(_index, obj._index);
+    }
+
+    /*!
+     * \brief move assignment operator
+     *
+     * \param obj object to move from
+     * \return variant& this object
+     */
+    variant& operator=(variant&& obj) {
+        if (this == &obj) {
+            return *this;
+        }
+
+        destroy();
+        helper::move(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
+        std::swap(_index, obj._index);
+        return *this;
+    }
+
+    /*!
      * \brief construct with an object
      *
      * \tparam type type of the object to create in this object
@@ -454,11 +506,6 @@ public:
             std::forward<type>(obj));
         return *this;
     }
-
-    //! \todo implementation
-    variant(variant&&) = delete;
-    //! \todo implementation
-    variant& operator=(variant&&) = delete;
 
     /*!
      * \brief destroy the object
