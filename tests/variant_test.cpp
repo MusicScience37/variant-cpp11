@@ -405,7 +405,7 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(left.operator!=(right) == true);
 
         left = 2;
-        right = 3;
+        right = 2.0F;
         REQUIRE(left.operator==(right) == false);
         REQUIRE(left.operator!=(right) == true);
 
