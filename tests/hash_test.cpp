@@ -23,6 +23,7 @@
  */
 #include <catch2/catch.hpp>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "variant_cpp11/variant.h"
 
@@ -62,5 +63,22 @@ TEST_CASE("std::hash<variant_cpp11::variant>") {
         REQUIRE(map.at(1) == 2);
         REQUIRE(map.at(object) == 3);
         REQUIRE(map.at("abc") == 4);
+        REQUIRE(map.count(variant_type()) == 0);
+    }
+
+    SECTION("use in unordered_set") {
+        using variant_type = variant_cpp11::variant<int, int, std::string>;
+
+        std::unordered_set<variant_type> map;
+        REQUIRE_NOTHROW(map.emplace(1));
+        variant_type object;
+        object.emplace<1>(1);
+        REQUIRE_NOTHROW(map.emplace(object));
+        REQUIRE_NOTHROW(map.emplace("abc"));
+
+        REQUIRE(map.count(1) == 1);
+        REQUIRE(map.count(object) == 1);
+        REQUIRE(map.count("abc") == 1);
+        REQUIRE(map.count(variant_type()) == 0);
     }
 }
