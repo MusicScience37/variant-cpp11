@@ -22,6 +22,10 @@
  * SOFTWARE.
  */
 #pragma once
+/*!
+ * \file variant.h
+ * \brief implementation of all classes and functions in variant-cpp11 project
+ */
 
 #include <cstddef>
 #include <limits>
@@ -47,6 +51,9 @@ inline constexpr std::size_t invalid_index() {
     return std::numeric_limits<std::size_t>::max();
 }
 
+/*!
+ * \brief struct to specify invalid types
+ */
 struct invalid_type {};
 
 /*!
@@ -152,6 +159,7 @@ struct variant_storage {
  * \tparam arg_types types of args
  * \param ptr pointer in which the object is created
  * \param args arguments of constructor
+ * \return no object (enable_if expression will be evaluated to void)
  */
 template <typename creating_type, typename... arg_types>
 inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
@@ -166,6 +174,7 @@ inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
  * \tparam arg_types types of args
  * \param ptr pointer in which the object is created
  * \param args arguments of constructor
+ * \return no object (enable_if expression will be evaluated to void)
  */
 template <typename creating_type, typename... arg_types>
 inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
@@ -396,6 +405,11 @@ struct variant_helper<front_index> {
 
 }  // namespace impl
 
+/*!
+ * \brief class to store objects of multiple types
+ *
+ * \tparam stored_types types of stored objects
+ */
 template <typename... stored_types>
 class variant {
 private:
