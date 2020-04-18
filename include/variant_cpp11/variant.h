@@ -985,4 +985,133 @@ private:
     }
 };
 
+namespace impl {
+
+/*!
+ * \brief helper class for hash of variant
+ *
+ * \tparam front_index index of the first type in template parameters
+ * \tparam types types in variant
+ */
+template <std::size_t front_index, typename... types>
+class hash_helper;
+
+/*!
+ * \brief helper class for hash of variant
+ *
+ * \tparam front_index index of front_type
+ * \tparam front_type first type
+ * \tparam remaining_types remaining types
+ */
+template <std::size_t front_index, typename front_type,
+    typename... remaining_types>
+class hash_helper<front_index, front_type, remaining_types...> {
+private:
+    //! hash_helper of remaining types
+    using remaining_helper = hash_helper<front_index + 1, remaining_types...>;
+
+    //! helper object of remaining types
+    remaining_helper _remaining_helper;
+
+    //! hash object
+    std::hash<front_type> _hash;
+
+public:
+    //! default constructor
+    hash_helper() : _remaining_helper(), _hash() {}
+
+    /*!
+     * \brief calculate hash number
+     *
+     * \tparam variant_type type of variant object
+     * \param index index of type
+     * \param object variant object
+     * \return std::size_t hash number
+     */
+    template <typename variant_type>
+    std::size_t operator()(
+        std::size_t index, const variant_type& object) const {
+        if (index == front_index) {
+            return front_index + _hash(object.template get<front_index>());
+        }
+        return _remaining_helper(index, object);
+    }
+};
+
+/*!
+ * \brief hash_helper for no type
+ *
+ * \tparam front_index index
+ */
+template <std::size_t front_index>
+class hash_helper<front_index> {
+public:
+    /*!
+     * \brief calculate hash number
+     *
+     * \tparam variant_type type of variant object
+     * \param index index of type
+     * \param object variant object
+     * \return std::size_t hash number
+     */
+    template <typename variant_type>
+    std::size_t operator()(std::size_t index, const variant_type& object) const
+        noexcept {
+        return invalid_index();
+    }
+};
+
+/*!
+ * \brief class of hash function of variant
+ *
+ * \tparam stored_types stored types
+ */
+template <typename... stored_types>
+class variant_hash {
+private:
+    //! type of helper class
+    using helper = hash_helper<0, stored_types...>;
+
+    //! helper object
+    helper _helper;
+
+public:
+    //! default constructor
+    variant_hash() : _helper() {}
+
+    /*!
+     * \brief calculate hash number
+     *
+     * \param object variant object
+     * \return std::size_t hash number
+     */
+    std::size_t operator()(const variant<stored_types...>& object) const {
+        return _helper(object.index(), object);
+    }
+};
+
+}  // namespace impl
+
 }  // namespace variant_cpp11
+
+/*!
+ * \brief namespace of the C++ standard library
+ */
+namespace std {
+
+/*!
+ * \brief std::hash for variant
+ *
+ * \tparam stored_types stored types in variant
+ */
+template <typename... stored_types>
+struct hash<variant_cpp11::variant<stored_types...>>
+    : public variant_cpp11::impl::variant_hash<stored_types...> {
+    //! type of arguments
+    using argument_type = variant_cpp11::variant<stored_types...>;
+
+    //! type of return values
+    using result_type = std::size_t;
+};
+
+}  // namespace std
