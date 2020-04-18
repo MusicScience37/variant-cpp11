@@ -433,6 +433,11 @@ public:
     variant() noexcept : _storage(), _index(invalid_index()) {}
 
     /*!
+     * \name Copy and Move Functions
+     */
+    ///@{
+
+    /*!
      * \brief copy constructor
      *
      * \param obj object to copy from
@@ -486,6 +491,18 @@ public:
         return *this;
     }
 
+    ///@}
+
+    /*!
+     * \brief destroy the object
+     */
+    ~variant() { destroy(); }
+
+    /*!
+     * \name Assign Objects
+     */
+    ///@{
+
     /*!
      * \brief construct with an object
      *
@@ -520,11 +537,6 @@ public:
             std::forward<type>(obj));
         return *this;
     }
-
-    /*!
-     * \brief destroy the object
-     */
-    ~variant() { destroy(); }
 
     /*!
      * \brief create an object in this object
@@ -569,6 +581,13 @@ public:
         _index = created_type_index;
         return get_no_check<created_type>();
     }
+
+    ///@}
+
+    /*!
+     * \name Get Objects
+     */
+    ///@{
 
     /*!
      * \brief get value
@@ -633,6 +652,13 @@ public:
         return get_no_check<type>();
     }
 
+    ///@}
+
+    /*!
+     * \name Check Stored Data
+     */
+    ///@{
+
     /*!
      * \brief get index of type stored in this object
      *
@@ -654,6 +680,8 @@ public:
      * \return bool whether this object has a value
      */
     explicit operator bool() const noexcept { return has_value(); }
+
+    ///@}
 
 private:
     /*!
