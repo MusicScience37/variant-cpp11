@@ -93,9 +93,11 @@ static analysis:
     - cmake -S ./ -B $BUILD_DIR
       -DVARIANT_CPP11_TESTING:BOOL=ON
       -DVARIANT_CPP11_WRITE_JUNIT:BOOL=ON
+      -DVARIANT_CPP11_ENABLE_BENCHMARK:BOOL=ON
     - cmake --build $BUILD_DIR
     - cd $BUILD_DIR
     - ctest -V .
+    - ../scripts/execute_benchmarks.sh ./
   after_script:
     - scripts/collect_test_results.sh $BUILD_DIR/junit
   artifacts:
@@ -119,6 +121,7 @@ clang coverage:
       -DCMAKE_BUILD_TYPE=Debug
       -DVARIANT_CPP11_TESTING:BOOL=ON
       -DVARIANT_CPP11_WRITE_JUNIT:BOOL=ON
+      -DVARIANT_CPP11_ENABLE_BENCHMARK:BOOL=ON
       "-DCMAKE_CXX_FLAGS=-fprofile-instr-generate -fcoverage-mapping"
       "-DCMAKE_MODULE_LINKER_FLAGS=-fprofile-instr-generate -fcoverage-mapping"
     - cmake --build $BUILD_DIR
@@ -126,6 +129,7 @@ clang coverage:
     - mkdir coverage
     - export LLVM_PROFILE_FILE=$(pwd)/coverage/coverage_%p.profraw
     - ctest -V .
+    - ../scripts/execute_benchmarks.sh ./
     - cd ../
     - scripts/collect_llvm_coverage.sh build_clang_coverage
   coverage: '/Line Coverage: \d+\.\d+/'

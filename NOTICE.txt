@@ -2,3 +2,6 @@ Copyright 2020 MusicScience37 (Kenta Kabashima)
 
 This project includes Catch2 library, which is available under a 
 "Boost Software License 1.0." For details, see extern/Catch2.
+
+This project includes benchmark library, which is available under a 
+"Apache License, Version 2.0." For details, see extern/benchmark.
