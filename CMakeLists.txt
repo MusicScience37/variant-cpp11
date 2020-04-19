@@ -27,3 +27,12 @@ if(VARIANT_CPP11_TESTING)
     enable_testing()
     add_subdirectory(tests)
 endif()
+
+option(VARIANT_CPP11_ENABLE_BENCHMARK "enable benchmarks of variant-cpp11" OFF)
+if(VARIANT_CPP11_ENABLE_BENCHMARK)
+    set(BENCHMARK_ENABLE_TESTING
+        OFF
+        CACHE BOOL "disable test of benchmark" FORCE)
+    add_subdirectory(extern/benchmark)
+    add_subdirectory(benchmark)
+endif()
