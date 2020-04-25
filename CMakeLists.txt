@@ -36,3 +36,8 @@ if(VARIANT_CPP11_ENABLE_BENCHMARK)
     add_subdirectory(extern/benchmark)
     add_subdirectory(benchmark)
 endif()
+
+option(VARIANT_CPP11_BUILD_EXAMPLE "build example program of variant-cpp11" OFF)
+if(VARIANT_CPP11_BUILD_EXAMPLE)
+    add_subdirectory(example)
+endif()
