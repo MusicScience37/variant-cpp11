@@ -699,7 +699,8 @@ public:
      * \return type* pointer to the value if possible, otherwise nullptr
      */
     template <std::size_t type_index>
-    auto get_if() -> typename helper::template index_type<type_index>* {
+    auto get_if() noexcept ->
+        typename helper::template index_type<type_index>* {
         using type = typename helper::template index_type<type_index>;
 
         if (type_index != _index) {
@@ -730,7 +731,7 @@ public:
      * \return const type* pointer to the value if possible, otherwise nullptr
      */
     template <std::size_t type_index>
-    auto get_if() const -> const
+    auto get_if() const noexcept -> const
         typename helper::template index_type<type_index>* {
         using type = typename helper::template index_type<type_index>;
 
@@ -763,7 +764,7 @@ public:
      * \return type* pointer to the value if possible, otherwise nullptr
      */
     template <typename type>
-    type* get_if() {
+    type* get_if() noexcept {
         constexpr std::size_t type_index = helper::template type_index<type>();
         return get_if<type_index>();
     }
@@ -790,7 +791,7 @@ public:
      * \return const type* pointer to the value if possible, otherwise nullptr
      */
     template <typename type>
-    const type* get_if() const {
+    const type* get_if() const noexcept {
         constexpr std::size_t type_index = helper::template type_index<type>();
         return get_if<type_index>();
     }
