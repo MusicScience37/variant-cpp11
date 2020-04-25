@@ -2,6 +2,15 @@
 
 Implementation of variant class in C++11.
 
+## Documentation
+
+[Documentation generated with Doxygen](https://musicscience37.gitlab.io/variant-cpp11/)
+is available.
+
+## Example
+
+An example code exists at example/example.cpp.
+
 ## License
 
 This project is licensed under MIT License.
