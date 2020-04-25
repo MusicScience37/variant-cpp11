@@ -1,0 +1,2 @@
+add_executable(variant_cpp11_example example.cpp)
+target_link_libraries(variant_cpp11_example PRIVATE variant-cpp11)
