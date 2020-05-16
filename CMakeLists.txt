@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(
     variant_cpp11
-    VERSION 1.0
+    VERSION 1.1.0
     DESCRIPTION "Implementation of variant class in C++11"
     LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
