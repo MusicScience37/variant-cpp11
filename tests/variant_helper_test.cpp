@@ -157,6 +157,16 @@ TEST_CASE("variant_cpp11::impl::variant_helper") {
         REQUIRE(object_count::count == 0);
     }
 
+    SECTION("is_all_nothrow_movable") {
+        struct test_type {             // NOLINT
+            test_type(test_type&&) {}  // NOLINT
+        };
+        STATIC_REQUIRE(
+            variant_helper<0, int, float>::is_all_nothrow_movable == true);
+        STATIC_REQUIRE(
+            variant_helper<0, int, test_type>::is_all_nothrow_movable == false);
+    }
+
     SECTION("equal") {
         using test_helper = variant_helper<0, float, object_count, int>;
         using test_storage = variant_storage<float, object_count, int>;

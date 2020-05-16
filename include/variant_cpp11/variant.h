@@ -159,6 +159,36 @@ struct max_size<> {
 };
 
 /*!
+ * \brief template struct to check whether all booleans are true
+ *
+ * \tparam values boolean values
+ */
+template <bool... values>
+struct is_all_true;
+
+/*!
+ * \brief is_all_true for multiple boolean values
+ *
+ * \tparam front_val first value in the template parameters
+ * \tparam remaining_val remaining values in the template parameters
+ */
+template <bool front_val, bool... remaining_val>
+struct is_all_true<front_val, remaining_val...> {
+    //! whether all boolean is true
+    static constexpr bool value =
+        front_val && is_all_true<remaining_val...>::value;
+};
+
+/*!
+ * \brief is_all_true for no boolean value
+ */
+template <>
+struct is_all_true<> {
+    //! whether all boolean is true
+    static constexpr bool value = true;
+};
+
+/*!
  * \brief storage for variant
  *
  * \tparam types types used in variant
@@ -213,8 +243,10 @@ struct variant_storage {
  * \return no object (enable_if expression will be evaluated to void)
  */
 template <typename creating_type, typename... arg_types>
-inline auto create(void* ptr, arg_types&&... args) -> typename std::enable_if<
-    std::is_constructible<creating_type, arg_types...>::value>::type {
+inline auto create(void* ptr, arg_types&&... args) noexcept(
+    std::is_nothrow_constructible<creating_type, arg_types...>::value) ->
+    typename std::enable_if<
+        std::is_constructible<creating_type, arg_types...>::value>::type {
     ::new (ptr) creating_type(std::forward<arg_types>(args)...);
 }
 
@@ -362,6 +394,11 @@ struct variant_helper<front_index, front_type, remaining_types...> {
         }
     }
 
+    //! whether all types are movable without exceptions
+    static constexpr bool is_all_nothrow_movable =
+        remaining_helper::is_all_nothrow_movable &&
+        std::is_nothrow_move_constructible<front_type>::value;
+
     /*!
      * \brief move the object in a pointer
      *
@@ -369,7 +406,8 @@ struct variant_helper<front_index, front_type, remaining_types...> {
      * \param from buffer to move from
      * \param to buffer to move to (overwritten)
      */
-    static void move(std::size_t index, void* from, void* to) {
+    static void move(std::size_t index, void* from, void* to) noexcept(
+        is_all_nothrow_movable) {
         if (index == front_index) {
             create<front_type, front_type&&>(
                 to, std::move(*static_cast<front_type*>(from)));
@@ -474,7 +512,10 @@ struct variant_helper<front_index> {
      * \param from buffer to copy from
      * \param to buffer to copy to (overwritten)
      */
-    static void copy(std::size_t index, const void* from, void* to) {}
+    static void copy(std::size_t index, const void* from, void* to) noexcept {}
+
+    //! whether all types are movable without exceptions
+    static constexpr bool is_all_nothrow_movable = true;
 
     /*!
      * \brief move the object in a pointer
@@ -483,7 +524,7 @@ struct variant_helper<front_index> {
      * \param from buffer to move from
      * \param to buffer to move to (overwritten)
      */
-    static void move(std::size_t index, void* from, void* to) {}
+    static void move(std::size_t index, void* from, void* to) noexcept {}
 
     /*!
      * \brief destoy the object in a pointer
@@ -526,14 +567,14 @@ private:
     using storage_type = impl::variant_storage<stored_types...>;
 
     //! storage
-    storage_type _storage;
+    storage_type _storage{};
 
     //! type index
-    std::size_t _index;
+    std::size_t _index{invalid_index()};
 
 public:
     //! default constructor (create invalid object)
-    variant() noexcept : _storage(), _index(invalid_index()) {}
+    variant() noexcept = default;
 
     /*!
      * \name Copy and Move Functions
@@ -545,7 +586,7 @@ public:
      *
      * \param obj object to copy from
      */
-    variant(const variant& obj) : variant() {
+    variant(const variant& obj) {
         helper::copy(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
         _index = obj._index;
     }
@@ -572,7 +613,7 @@ public:
      *
      * \param obj object to move from
      */
-    variant(variant&& obj) : variant() {
+    variant(variant&& obj) noexcept(helper::is_all_nothrow_movable) {
         helper::move(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
         std::swap(_index, obj._index);
     }
@@ -583,7 +624,7 @@ public:
      * \param obj object to move from
      * \return variant& this object
      */
-    variant& operator=(variant&& obj) {
+    variant& operator=(variant&& obj) noexcept(helper::is_all_nothrow_movable) {
         if (this == &obj) {
             return *this;
         }
@@ -1056,8 +1097,8 @@ public:
      * \return std::size_t hash number
      */
     template <typename variant_type>
-    std::size_t operator()(std::size_t index, const variant_type& object) const
-        noexcept {
+    std::size_t operator()(
+        std::size_t index, const variant_type& object) const noexcept {
         return invalid_index();
     }
 };
