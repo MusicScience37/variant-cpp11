@@ -112,7 +112,7 @@ static analysis:
 clang coverage:
   extends: .release-test-base
   stage: Test with Clang
-  image: registry.gitlab.com/musicscience37_ci/clang-ci-docker:clang9-v1-0
+  image: registry.gitlab.com/musicscience37_ci/clang-ci-docker:clang9-v1-1
   variables:
     BUILD_DIR: build_clang_coverage
   script:
