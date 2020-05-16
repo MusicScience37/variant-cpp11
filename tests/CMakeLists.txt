@@ -2,6 +2,7 @@ add_executable(
     variant_cpp11_test
     main.cpp
     max_size_test.cpp
+    is_all_true_test.cpp
     create_test.cpp
     object_count.cpp
     variant_helper_test.cpp

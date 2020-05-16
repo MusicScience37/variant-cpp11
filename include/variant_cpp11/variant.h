@@ -159,6 +159,36 @@ struct max_size<> {
 };
 
 /*!
+ * \brief template struct to check whether all booleans are true
+ *
+ * \tparam values boolean values
+ */
+template <bool... values>
+struct is_all_true;
+
+/*!
+ * \brief is_all_true for multiple boolean values
+ *
+ * \tparam front_val first value in the template parameters
+ * \tparam remaining_val remaining values in the template parameters
+ */
+template <bool front_val, bool... remaining_val>
+struct is_all_true<front_val, remaining_val...> {
+    //! whether all boolean is true
+    static constexpr bool value =
+        front_val && is_all_true<remaining_val...>::value;
+};
+
+/*!
+ * \brief is_all_true for no boolean value
+ */
+template <>
+struct is_all_true<> {
+    //! whether all boolean is true
+    static constexpr bool value = true;
+};
+
+/*!
  * \brief storage for variant
  *
  * \tparam types types used in variant
@@ -1056,8 +1086,8 @@ public:
      * \return std::size_t hash number
      */
     template <typename variant_type>
-    std::size_t operator()(std::size_t index, const variant_type& object) const
-        noexcept {
+    std::size_t operator()(
+        std::size_t index, const variant_type& object) const noexcept {
         return invalid_index();
     }
 };
