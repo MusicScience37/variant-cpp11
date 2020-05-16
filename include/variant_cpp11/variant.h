@@ -567,14 +567,14 @@ private:
     using storage_type = impl::variant_storage<stored_types...>;
 
     //! storage
-    storage_type _storage;
+    storage_type _storage{};
 
     //! type index
-    std::size_t _index;
+    std::size_t _index{invalid_index()};
 
 public:
     //! default constructor (create invalid object)
-    variant() noexcept : _storage(), _index(invalid_index()) {}
+    variant() noexcept = default;
 
     /*!
      * \name Copy and Move Functions
@@ -586,7 +586,7 @@ public:
      *
      * \param obj object to copy from
      */
-    variant(const variant& obj) : variant() {
+    variant(const variant& obj) {
         helper::copy(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
         _index = obj._index;
     }
@@ -613,8 +613,7 @@ public:
      *
      * \param obj object to move from
      */
-    variant(variant&& obj) noexcept(helper::is_all_nothrow_movable)
-        : variant() {
+    variant(variant&& obj) noexcept(helper::is_all_nothrow_movable) {
         helper::move(obj._index, obj._storage.void_ptr(), _storage.void_ptr());
         std::swap(_index, obj._index);
     }
