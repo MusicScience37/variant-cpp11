@@ -241,6 +241,23 @@ TEST_CASE("variant_cpp11::variant") {
         REQUIRE(object_count::count == 0);
     }
 
+    SECTION("noexcept of move") {
+        struct test_type {             // NOLINT
+            test_type(test_type&&) {}  // NOLINT
+        };
+        STATIC_REQUIRE(std::is_nothrow_move_constructible<
+                           variant_cpp11::variant<int, float>>::value == true);
+        STATIC_REQUIRE(std::is_nothrow_move_assignable<
+                           variant_cpp11::variant<int, float>>::value == true);
+
+        STATIC_REQUIRE(
+            std::is_nothrow_move_constructible<
+                variant_cpp11::variant<test_type, float>>::value == false);
+        STATIC_REQUIRE(
+            std::is_nothrow_move_assignable<
+                variant_cpp11::variant<test_type, float>>::value == false);
+    }
+
     SECTION("emplace and destruct with multiple types") {
         using test_type =
             variant_cpp11::variant<int, std::string, object_count>;
