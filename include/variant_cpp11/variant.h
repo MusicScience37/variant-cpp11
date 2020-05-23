@@ -574,7 +574,7 @@ private:
 
 public:
     //! default constructor (create invalid object)
-    variant() noexcept = default;
+    variant() noexcept {}
 
     /*!
      * \name Copy and Move Functions
