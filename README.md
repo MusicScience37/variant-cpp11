@@ -2,6 +2,16 @@
 
 Implementation of variant class in C++11.
 
+## Requirements
+
+Test is done with following compilers:
+
+- GCC 8, 9, 10
+- Clang 7, 8, 9
+- MSVC 2019 (manually)
+
+Note that GCC 7 cannot compile this library.
+
 ## Documentation
 
 [Documentation generated with Doxygen](https://musicscience37.gitlab.io/variant-cpp11/)
