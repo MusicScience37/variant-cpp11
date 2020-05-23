@@ -134,13 +134,6 @@ clang coverage:
     - scripts/collect_llvm_coverage.sh build_clang_coverage
   coverage: '/Line Coverage: \d+\.\d+/'
 
-gcc-7:
-  extends: .release-test-base
-  stage: Test with GCC
-  image: musicscience37/gcc-ci:gcc7-v2.0
-  variables:
-    BUILD_DIR: build_gcc7
-
 gcc-8:
   extends: .release-test-base
   stage: Test with GCC
