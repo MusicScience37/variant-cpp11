@@ -575,7 +575,7 @@ private:
 
 public:
     //! default constructor (create invalid object)
-    variant() noexcept {}
+    variant() noexcept {}  // NOLINT: required to build
 
     /*!
      * \name Copy and Move Functions
