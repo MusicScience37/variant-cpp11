@@ -201,7 +201,7 @@ struct variant_storage {
      * \return constexpr std::size_t size of the storage
      */
     static constexpr std::size_t get_size() {
-        return max_size<sizeof(types)...>::get();
+        return max_size<1, sizeof(types)...>::get();
     }
 
     /*!
@@ -210,7 +210,8 @@ struct variant_storage {
      * \return constexpr std::size_t alignment of the storage
      */
     static constexpr std::size_t get_align() {
-        return max_size<alignof(types)...>::get();
+        // get default alignment with alignof(int)
+        return max_size<alignof(int), alignof(types)...>::get();
     }
 
     //! storage
