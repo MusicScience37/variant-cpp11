@@ -137,9 +137,44 @@ clang coverage:
 gcc-8:
   extends: .release-test-base
   stage: Test with GCC
-  image: registry.gitlab.com/musicscience37_ci/gcc-ci-docker:gcc8-v1-1
+  image: musicscience37/gcc-ci:gcc8-v2.0
   variables:
     BUILD_DIR: build_gcc8
+
+gcc-9:
+  extends: .release-test-base
+  stage: Test with GCC
+  image: musicscience37/gcc-ci:gcc9-v2.0
+  variables:
+    BUILD_DIR: build_gcc9
+
+gcc-10:
+  extends: .release-test-base
+  stage: Test with GCC
+  image: musicscience37/gcc-ci:gcc10-v2.0
+  variables:
+    BUILD_DIR: build_gcc10
+
+clang-7:
+  extends: .release-test-base
+  stage: Test with Clang
+  image: musicscience37/clang-ci:clang7-v2.0
+  variables:
+    BUILD_DIR: build_clang7
+
+clang-8:
+  extends: .release-test-base
+  stage: Test with Clang
+  image: musicscience37/clang-ci:clang8-v2.0
+  variables:
+    BUILD_DIR: build_clang8
+
+clang-9:
+  extends: .release-test-base
+  stage: Test with Clang
+  image: musicscience37/clang-ci:clang9-v2.0
+  variables:
+    BUILD_DIR: build_clang9
 
 pages:
   extends: .retry setting

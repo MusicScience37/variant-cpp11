@@ -201,7 +201,7 @@ struct variant_storage {
      * \return constexpr std::size_t size of the storage
      */
     static constexpr std::size_t get_size() {
-        return max_size<sizeof(types)...>::get();
+        return max_size<1, sizeof(types)...>::get();
     }
 
     /*!
@@ -210,11 +210,12 @@ struct variant_storage {
      * \return constexpr std::size_t alignment of the storage
      */
     static constexpr std::size_t get_align() {
-        return max_size<alignof(types)...>::get();
+        // get default alignment with alignof(int)
+        return max_size<alignof(int), alignof(types)...>::get();
     }
 
     //! storage
-    alignas(get_align()) char data[get_size()];
+    alignas(get_align()) char data[get_size()] = {};
 
     /*!
      * \brief get void pointer of data
@@ -574,7 +575,7 @@ private:
 
 public:
     //! default constructor (create invalid object)
-    variant() noexcept = default;
+    variant() noexcept {}  // NOLINT: required to build
 
     /*!
      * \name Copy and Move Functions
@@ -656,7 +657,7 @@ public:
     template <typename type,
         typename = typename std::enable_if<!std::is_same<
             typename std::decay<type>::type, my_type>::value>::type>
-    variant(type&& obj) : variant() {
+    variant(type&& obj) {
         constexpr std::size_t type_index =
             helper::template assigning_type_index<type>();
         static_assert(type_index != invalid_index(), "invalid type");
@@ -1053,14 +1054,14 @@ private:
     using remaining_helper = hash_helper<front_index + 1, remaining_types...>;
 
     //! helper object of remaining types
-    remaining_helper _remaining_helper;
+    remaining_helper _remaining_helper{};
 
     //! hash object
-    std::hash<front_type> _hash;
+    std::hash<front_type> _hash{};
 
 public:
     //! default constructor
-    hash_helper() : _remaining_helper(), _hash() {}
+    hash_helper() = default;
 
     /*!
      * \brief calculate hash number
@@ -1115,11 +1116,11 @@ private:
     using helper = hash_helper<0, stored_types...>;
 
     //! helper object
-    helper _helper;
+    helper _helper{};
 
 public:
     //! default constructor
-    variant_hash() : _helper() {}
+    variant_hash() = default;
 
     /*!
      * \brief calculate hash number
