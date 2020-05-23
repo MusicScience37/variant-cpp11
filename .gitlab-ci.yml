@@ -141,6 +141,13 @@ gcc-8:
   variables:
     BUILD_DIR: build_gcc8
 
+gcc-9:
+  extends: .release-test-base
+  stage: Test with GCC
+  image: musicscience37/gcc-ci:gcc9-v2.0
+  variables:
+    BUILD_DIR: build_gcc8
+
 pages:
   extends: .retry setting
   stage: Publish
