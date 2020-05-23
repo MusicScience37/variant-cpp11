@@ -1,4 +1,4 @@
-image: ubuntu:eoan
+image: ubuntu:focal
 
 stages:
   - Check
@@ -16,15 +16,11 @@ line count:
   extends: .retry setting
   stage: Check
   dependencies: []
-  image: registry.gitlab.com/musicscience37_ci/cpp-base-image-docker:v1-1
-  before_script:
-    - mkdir -p temp
-    - wget -O temp/cloc.pl
-      https://github.com/AlDanial/cloc/releases/download/1.84/cloc-1.84.pl
+  image: registry.gitlab.com/musicscience37_ci/cloc-docker:v1-0
   script:
     - mkdir -p line_count
-    - perl temp/cloc.pl ./
-      --exclude-dir=extern,temp,line_count
+    - cloc ./
+      --exclude-dir=extern,line_count
       --force-lang=C++,h
       --json --out=line_count/line_count.json
   artifacts:
@@ -37,7 +33,7 @@ doc:
   stage: Build Documentation
   needs: ["line count"]
   dependencies: []
-  image: registry.gitlab.com/musicscience37_ci/sphinx-doxygen-docker:v1-2-1
+  image: musicscience37/sphinx-doxygen:v-2.0
   script:
     - mkdir build_doc
     - cmake -S ./ -B build_doc
@@ -53,7 +49,7 @@ static analysis:
   extends: .retry setting
   stage: Check
   dependencies: []
-  image: registry.gitlab.com/musicscience37_ci/clang-ci-docker:clang9-v1-1
+  image: musicscience37/clang-ci:clang9-v2.0
   before_script:
     - pip3 install junit2html
     - mkdir build_static_analysis
@@ -112,7 +108,7 @@ static analysis:
 clang coverage:
   extends: .release-test-base
   stage: Test with Clang
-  image: registry.gitlab.com/musicscience37_ci/clang-ci-docker:clang9-v1-1
+  image: musicscience37/clang-ci:clang9-v2.0
   variables:
     BUILD_DIR: build_clang_coverage
   script:
